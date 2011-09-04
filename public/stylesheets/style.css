@@ -1,24 +1,47 @@
 body {
-/*font: 14px "Lucida Grande", Helvetica, Arial, sans-serif*/
-  background: #f0f0f0;
+  background: #fff;
   padding: 0;
   margin: 0;
 }
-a {
-  color: #00b7ff;
+#center {
+  margin: 0 auto;
+  padding: 0;
+  width: 90%;
 }
-input.inactive {
-  border: 1px solid #555;
-  color: #999;
+h1.title {
+  margin: 15px 0 0 20px;
+  padding: 0;
+}
+h1.title a {
+  text-decoration: none;
+  color: #e55900;
+}
+a {
+  color: #e55900;
+}
+h1 a,
+h2 a,
+h3 a,
+h4 a {
+  text-decoration: none;
 }
 input.active,
 input:hover {
-  border: 1px solid #333;
-  color: #333;
+  border: 1px solid #333 !important;
+  color: #333 !important;
 }
 input.search {
+  border: 1px solid #ddd;
+  color: #999;
   font-size: 3em;
   padding: 4px;
+  width: 100%;
+}
+p.suggest {
+  color: #999;
+  font-size: 0.7em;
+  margin: 0;
+  padding: 0;
 }
 li.fontface {
   font-family: ChunkFiveRegular;
@@ -29,27 +52,29 @@ h1.fontface {
   letter-spacing: 0;
 }
 #menu {
-  background: #eee;
   width: 100%;
-  margin-bottom: 20px;
-  border-bottom: 1px solid #444;
+  margin: 0 0 20px 0;
+  padding: 0;
+  border-top: 1px solid #aaa;
+  border-bottom: 1px solid #aaa;
+}
+#menu ul {
+  margin: 0;
+  padding: 10px;
 }
 #menu ul li {
   list-style: none;
   display: inline;
   margin: 0;
   padding: 0;
-  font-size: 1.4em;
-  font-family: ChunkFiveRegular;
+  font-size: 1.2em;
+  font-weight: bold;
+/*font-family ChunkFiveRegular*/
 }
 #menu ul li a {
-  margin: 0;
-  padding: 20px;
+  margin: 0 10px 0 0;
+  padding: 10px 10px;
   text-decoration: none;
-}
-#menu ul li a:hover {
-  background: #ddd;
-  border-bottom: 2px solid #000;
 }
 #menu ul.right {
   float: right;
@@ -67,7 +92,7 @@ table tr td {
   padding: 2px 4px;
 }
 .result {
-  border: 1px solid #aaa;
+  border-top: 1px solid #bbb;
   margin: 5px;
   padding: 8px;
 }
@@ -76,4 +101,17 @@ table tr td {
 }
 .result .definitions li {
   list-style: none;
+}
+.result .edit {
+  float: right;
+}
+.result .edit p {
+  color: #999;
+  padding: 0;
+  margin: 0;
+  font-size: 0.7em;
+}
+.result h3 {
+  margin: 0;
+  padding: 0;
 }

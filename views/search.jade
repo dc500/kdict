@@ -1,9 +1,8 @@
-h1.fontface= title
-
 include includes/large-search
 
-p= results.count + " results"
-p= "Detected language: " + results.language
+p #{results.count} results, Detected language: #{results.language}
 
-- if (results.entries)
+- if (results.entries.length > 0)
   != partial('result', results.entries)
+- else
+  p No results found

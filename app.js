@@ -270,18 +270,21 @@ app.del('/sessions', loadUser, function(req, res) {
 app.get('/', loadUser, function(req, res, next) {
     if (req.param('q')) {
         searchProvider.search(req.param('q'), function( error, results) {
-            res.render('search',
-                { locals: {
-                              results: results
-                          },
+            res.render('search', {
+                locals: {
+                    results: results,
+                    q: req.param('q')
+                },
                 title: "'" + req.param('q') + "'"
-
-                });
+            });
         });
     }
     else {
         res.render('index', {
-            title: 'Korean dictionary'
+            title: 'Korean dictionary',
+            locals: { // hacky
+                q: ''
+            }
         });
     }
 });

@@ -1,16 +1,23 @@
 $(document).ready(function(){
 
-    var searchDefault = $("#search").val();
+    //var searchDefault = $("#search").val();
     $("#search").focus(function(){  
+        $("#search").addClass('active');
+
+        /*
         if ($("#search").val() == searchDefault) {
             $("#search").val("");  
         }
+        */
     });
 
     $("#search").blur(function(){  
+        $("#search").removeClass('active');
+        /*
         if ($("#search").val() == "") {
             $("#search").val(searchDefault);  
         }
+        */
     });  
 
     $("#search").focus();

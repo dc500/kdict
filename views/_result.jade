@@ -1,22 +1,19 @@
-hr
-
 .result
-  .korean
-    h2 
-      a(href="/entries/#{result._id}") #{result.korean.word}
-
-    .meta
-      p= result.hanja
-
+  .edit
       - if (typeof currentUser !== 'undefined')
         p
           a(href="/entries/#{result._id}/edit") Edit
       - else
         p (Login to edit)
 
+  .korean
+    h3 
+      a(href="/entries/#{result._id}") #{result.korean.word}
+      &nbsp;
+      #{result.hanja}
+
   .definitions
     - each defs, lang in result.definitions
-      h3= lang
       ul
         - each definition, i in defs
           li= definition
