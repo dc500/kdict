@@ -1,0 +1,23 @@
+.page
+  h2 Sign Up
+
+  form.users(method='post', action='/users')
+    div
+      label Email:
+      input(name='user[email]', value=user.email || '')
+
+    div
+      label Username:
+      input(name='user[username]', value=user.username || '')
+
+    div
+      label Password:
+      input(name='user[password]', value=user.password || '', type='password')
+
+    p Todo: Add more fields
+    
+    div
+      input(type='submit', value='Sign up')
+      span \ or 
+        a(href='/sessions/new') Log In
+

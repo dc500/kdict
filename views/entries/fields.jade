@@ -1,0 +1,41 @@
+div
+  label Korean:
+  input(name='entry[korean]', value=entry.korean.word || '')
+
+div
+  label Hanja:
+  input(name='entry[hanja]', value=entry.hanja || '')
+
+div
+  label English:
+  input(name='entry[english]', value=entry.definitions.english[0] || '')
+
+p Internal ID: #{entry._id}
+p POS: #{entry.pos}
+
+//p Part of speech:
+//  select(name="entry[pos]")
+//    option(value="") -- Unknown --
+//    option(value="noun") Noun
+//    option(value="verb") Verb
+//    option(value="adjective") Adjective
+
+
+h3 Flags
+- if (entry.flags.length != 0)
+  ul
+  - each flag, i in entry.flags
+    li= flag
+- else
+  p (none)
+
+div
+  h4 Legacy data
+  ul
+    li Submitter: #{ entry.old.submitter }
+    li WordID: #{ entry.old.wordid }
+    li Table: #{ entry.old.table }
+
+div
+  input(type='submit', value='Save')
+

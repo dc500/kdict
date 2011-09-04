@@ -1,0 +1,9 @@
+h2 Edit Entry
+p
+  a.button(href='/')
+    &larr; Back to search
+form(method='post', action='/entries/' + entry.id)
+  input(name='entry[id]', value=entry.id, type='hidden')
+  input(name='_method', value='PUT', type='hidden')
+  !=partial('fields', { locals: { entry: entry } })
+

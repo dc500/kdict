@@ -1,0 +1,79 @@
+body {
+/*font: 14px "Lucida Grande", Helvetica, Arial, sans-serif*/
+  background: #f0f0f0;
+  padding: 0;
+  margin: 0;
+}
+a {
+  color: #00b7ff;
+}
+input.inactive {
+  border: 1px solid #555;
+  color: #999;
+}
+input.active,
+input:hover {
+  border: 1px solid #333;
+  color: #333;
+}
+input.search {
+  font-size: 3em;
+  padding: 4px;
+}
+li.fontface {
+  font-family: ChunkFiveRegular;
+}
+h1.fontface {
+/*font-family ChunkFiveRegular*/
+  font: 60px/68px ChunkFiveRegular, Arial, sans-serif;
+  letter-spacing: 0;
+}
+#menu {
+  background: #eee;
+  width: 100%;
+  margin-bottom: 20px;
+  border-bottom: 1px solid #444;
+}
+#menu ul li {
+  list-style: none;
+  display: inline;
+  margin: 0;
+  padding: 0;
+  font-size: 1.4em;
+  font-family: ChunkFiveRegular;
+}
+#menu ul li a {
+  margin: 0;
+  padding: 20px;
+  text-decoration: none;
+}
+#menu ul li a:hover {
+  background: #ddd;
+  border-bottom: 2px solid #000;
+}
+#menu ul.right {
+  float: right;
+}
+table {
+  border-collapse: collapse;
+}
+table thead tr td {
+  font-weight: bold;
+  font-size: 1.1em;
+  border: 1px solid #555;
+}
+table tr td {
+  border: 1px solid #aaa;
+  padding: 2px 4px;
+}
+.result {
+  border: 1px solid #aaa;
+  margin: 5px;
+  padding: 8px;
+}
+.result .korean {
+  width: 200px;
+}
+.result .definitions li {
+  list-style: none;
+}

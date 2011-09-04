@@ -1,0 +1,40 @@
+!!! 5
+html
+  head
+    -if (typeof(title) !== 'undefined')
+      title KDict - #{title}
+    -else
+      title KDict
+    //link(rel='stylesheet', href='/stylesheets/style.css')
+    //link(rel='stylesheet', href='/stylesheets/fonts.css')
+    link(rel='shortcut icon', href='favicon.ico')
+    script(src='/javascripts/jquery-1.6.2.min.js')
+    script(src='/javascripts/gui.js')
+  body
+    #menu
+      ul.right
+        - if (typeof currentUser !== 'undefined')
+          li= currentUser.email
+            &nbsp; 
+            a(href='/sessions') (Log Out)
+        - else
+          li
+            a(href='/sessions/new') Login
+
+
+      ul
+        li
+          a(href='/') Search
+        li
+          a(href='/help/') Help Out
+        li
+          a(href='/download/') Download
+        li
+          a(href='/developers/') Developers
+        li
+          a(href='/about/') About
+        li
+          a(href="/entries/new") + Add Entry
+
+  !=body
+

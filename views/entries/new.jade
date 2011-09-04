@@ -1,0 +1,8 @@
+.page
+  h2 New Entry
+  p
+    a.button(href='/') &larr; Return to search
+
+  form(method='post', action='/entries')
+    !=partial('fields', { locals: { entry: entry } })
+

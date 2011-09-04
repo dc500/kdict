@@ -1,0 +1,9 @@
+h1.fontface= title
+
+include includes/large-search
+
+p= results.count + " results"
+p= "Detected language: " + results.language
+
+- if (results.entries)
+  != partial('result', results.entries)

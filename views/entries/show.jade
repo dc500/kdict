@@ -1,0 +1,41 @@
+h2= entry.korean.word
+
+p
+  a(href='/') &larr; Return to search
+  &nbsp; | &nbsp;
+
+  - if (typeof currentUser !== 'undefined')
+    a(href='/entries/#{entry._id}/edit') Edit
+  - else
+    p (Login to edit)
+
+p Hanja: #{entry.hanja}
+
+h3 Definitions
+.definitions
+  // TODO Stupid bug
+  //- each defs, lang in d.definitions
+
+  h4 English
+  ul
+  - each def, i in entry.definitions.english
+    li= def
+
+p Internal ID: #{entry._id}
+p POS: #{entry.pos}
+
+h3 Flags
+- if (entry.flags.length != 0)
+  ul
+  - each flag, i in entry.flags
+    li= flag
+- else
+  p (none)
+
+div
+  h4 Legacy data
+  ul
+    li Submitter: #{ entry.old.submitter }
+    li WordID: #{ entry.old.wordid }
+    li Table: #{ entry.old.table }
+
