@@ -17,10 +17,10 @@ The format of this is still being revised, but the current draft is shown below:
 
 ```yaml
 entry: {
-  korean: {
-    word: '음식',
-    length: 2, // for ordering search results
-  },
+	korean: {
+		word: '음식',
+		length: 2, // for ordering search results
+	},
 	pronunciation: '음식', // fill programmatically
 	hanja: '飮食', 
 	difficulty: 4,
