@@ -21,7 +21,13 @@ entry: {
 		word: '음식',
 		length: 2, // for ordering search results
 	},
-	pronunciation: '음식', // fill programmatically
+	pronunciation: { // fill programmatically
+		hangul: '음식',
+		rr:     'eum.sik',
+		yale:   'um.sik',
+		mr:     'ŭm.sik',
+		ipa:    'ɨm.ʃik]'
+	},
 	hanja: '飮食', 
 	difficulty: 4,
 	frequency: 24,
