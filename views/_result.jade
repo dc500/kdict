@@ -1,20 +1,28 @@
 .result
-  .edit
+
+  .left
+    .korean
+      h3 
+        a(href="/entries/#{result._id}") #{result.korean.word}
+      h4= result.hanja
+
+  .right
+    .definitions
+      //- if (results.definitions.length == 0)
+      - if (typeof(results.definitions) != 'undefined')
+        p No definition,
+          a(href="/entries/#{result._id}/edit") add one!
+      - else
+        - each defs, lang in result.definitions
+         ul
+           - each definition, i in defs
+             li= definition
+    .edit
       - if (typeof currentUser !== 'undefined')
         p
           a(href="/entries/#{result._id}/edit") Edit
       - else
         p (Login to edit)
 
-  .korean
-    h3 
-      a(href="/entries/#{result._id}") #{result.korean.word}
-      &nbsp;
-      #{result.hanja}
-
-  .definitions
-    - each defs, lang in result.definitions
-      ul
-        - each definition, i in defs
-          li= definition
+.result-break
 

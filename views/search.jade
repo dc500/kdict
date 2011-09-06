@@ -1,6 +1,6 @@
 include includes/large-search
 
-p #{results.count} results, Detected language: #{results.language}
+p Showing 20 of #{results.count} results, Detected language: #{results.language}
 
 - if (results.entries.length > 0)
   != partial('result', results.entries)

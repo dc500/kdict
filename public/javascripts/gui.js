@@ -1,3 +1,14 @@
+function updateDetectedLang() {
+    var val = $("#search").val();
+    if (val == "") {
+        $("#detect").html( "" );
+        return;
+    }
+
+    var type = korean.detect_characters(val);
+    $("#detect").html( "Language: " + type );
+}
+
 $(document).ready(function(){
 
     //var searchDefault = $("#search").val();
@@ -20,7 +31,11 @@ $(document).ready(function(){
         */
     });  
 
+    $("#search").keyup( updateDetectedLang );
+        
+
     $("#search").focus();
+    updateDetectedLang();
 });
 
 

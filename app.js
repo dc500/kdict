@@ -281,6 +281,7 @@ app.get('/', loadUser, function(req, res, next) {
     }
     else {
         res.render('index', {
+            debug: true,
             title: 'Korean dictionary',
             locals: { // hacky
                 q: ''
@@ -299,6 +300,14 @@ app.get('/', loadUser, function(req, res, next) {
 
 
 ////// ENTRY CONTENTS
+/*
+app.get('/entries/recent', loadUser, function(req, res) {
+    console.log("Displaying recent changes");
+    res.render('entries/recent', {
+        locals: { entries: }
+    });
+});
+*/
 
 app.get('/entries/new', loadUser, function(req, res) {
     if (!req.currentUser) {
@@ -547,26 +556,28 @@ app.post('/users.:format?', function(req, res) {
 
 
 // Dumb stuff
-app.get('/about/', function(req, res){
+app.get('/about/?', function(req, res){
     res.render('about', {
         title: 'About'
     });
 });
-app.get('/help/', function(req, res){
+app.get('/help/?', function(req, res){
     res.render('help', {
         title: 'Help Out'
     });
 });
-app.get('/download/', function(req, res){
+app.get('/download/?', function(req, res){
     res.render('download', {
         title: 'Download'
     });
 });
-app.get('/developers/', function(req, res){
+/*
+app.get('/developers/?', function(req, res){
     res.render('developers', {
         title: 'Developers'
     });
 });
+*/
 
 
 // Startup

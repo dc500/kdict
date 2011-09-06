@@ -2,11 +2,18 @@ body {
   background: #fff;
   padding: 0;
   margin: 0;
+  font-family: sans-serif;
+}
+p {
+  font-size: 0.9em;
 }
 #center {
   margin: 0 auto;
   padding: 0;
-  width: 90%;
+  width: 890px;
+}
+.light {
+  color: #999;
 }
 h1.title {
   margin: 15px 0 0 20px;
@@ -25,17 +32,50 @@ h3 a,
 h4 a {
   text-decoration: none;
 }
-input.active,
-input:hover {
-  border: 1px solid #333 !important;
+input:hover,
+input:focus {
   color: #333 !important;
+  outline: none;
+  background-color: #fff !important;
+}
+#searchbox {
+  width: 840px;
+  margin: 0 auto;
 }
 input.search {
-  border: 1px solid #ddd;
+  margin: 0;
+  padding: 3px;
+  border-right: none;
+  border-left: 1px solid #ddd;
+  border-top: 1px solid #ddd;
+  border-bottom: 1px solid #ddd;
+  border-color: #888;
+  background: #f5f5f5;
   color: #999;
   font-size: 3em;
-  padding: 4px;
-  width: 100%;
+  width: 740px;
+  -webkit-border-top-left-radius: 6px;
+  -webkit-border-bottom-left-radius: 6px;
+  -moz-border-radius-topleft: 6px;
+  -moz-border-radius-bottomleft: 6px;
+  border-top-left-radius: 6px;
+  border-bottom-left-radius: 6px;
+}
+input.search-button {
+  margin: 0;
+  padding: 3px;
+  background: #fff;
+  color: #999;
+  font-size: 3em;
+  border: 1px solid #ddd;
+  border-left: 1px dotted #ddd;
+  border-color: #888;
+  -webkit-border-top-right-radius: 6px;
+  -webkit-border-bottom-right-radius: 6px;
+  -moz-border-radius-topright: 6px;
+  -moz-border-radius-bottomright: 6px;
+  border-top-right-radius: 6px;
+  border-bottom-right-radius: 6px;
 }
 p.suggest {
   color: #999;
@@ -49,6 +89,13 @@ li.fontface {
 h1.fontface {
 /*font-family ChunkFiveRegular*/
   font: 60px/68px ChunkFiveRegular, Arial, sans-serif;
+  letter-spacing: 0;
+}
+h2.fontface {
+/*font-family ChunkFiveRegular*/
+  font: 36px/40px ChunkFiveRegular, Arial, sans-serif;
+  margin: 0;
+  padding: 0;
   letter-spacing: 0;
 }
 #menu {
@@ -92,15 +139,30 @@ table tr td {
   padding: 2px 4px;
 }
 .result {
-  border-top: 1px solid #bbb;
+  border-top: 1px solid #ddd;
   margin: 5px;
-  padding: 8px;
+  padding: 20px 10px;
 }
 .result .korean {
   width: 200px;
 }
+.result .definitions ul {
+  margin: 3px 5px 10px 5px;
+  padding: 0;
+}
 .result .definitions li {
+  margin: 0;
+  padding: 5px 10px;
   list-style: none;
+}
+.result .left {
+  float: left;
+  width: 180px;
+}
+.result .right {
+  float: right;
+  width: 650px;
+  border-left: 1px solid #ddd;
 }
 .result .edit {
   float: right;
@@ -111,7 +173,20 @@ table tr td {
   margin: 0;
   font-size: 0.7em;
 }
+.result-break {
+  clear: both;
+}
 .result h3 {
   margin: 0;
   padding: 0;
+}
+input {
+  border: 1px solid #bbb;
+}
+#footer {
+  border-top: 1px solid #aaa;
+}
+#footer ul li {
+  display: inline;
+  color: #aaa;
 }
