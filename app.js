@@ -22,7 +22,7 @@ var express = require('express'),
     Settings = { development: {}, test: {}, production: {} },
     emails;
 
-/*
+
 // Uncomment later
 emails = {
   send: function(template, mailOptions, templateOptions) {
@@ -55,12 +55,12 @@ emails = {
     });
   },
 
-  sendWelcome: function(user) {
-    this.send('welcome.jade', { to: user.email, subject: 'Welcome to Nodepad' }, { locals: { user: user } });
+  sendConfirmation: function(user) {
+    this.send('confirmation.jade', {
+        to: user.email, subject: 'KDict - Please Confirm'
+    }, { locals: { user: user } });
   }
 };
-
-*/
 
 
 var app = module.exports = express.createServer();
@@ -88,13 +88,11 @@ app.configure(function(){
    app.use(app.router);
    app.use(express.static(__dirname + '/public'));
     */
-    /*
     app.set('mailOptions', {
         host: 'localhost',
         port: '25',
         from: 'signup@kdict.com'
     });
-    */
 });
     
 
@@ -151,6 +149,8 @@ app.error(function(err, req, res, next) {
 
 
 
+// Attempt to log the user in
+// If fail, continue. Other methods check for currentUser
 function loadUser(req, res, next) {
     console.log("Loading user");
     console.log("Current session data " + req.session);
@@ -162,7 +162,7 @@ function loadUser(req, res, next) {
                 next();
             } else {
                 console.log("Couldn't find user");
-                res.redirect('/sessions/new');
+                res.redirect('/login');
             }
         });
     } else if (req.cookies.logintoken) {
@@ -171,7 +171,7 @@ function loadUser(req, res, next) {
     } else {
         console.log("No session data");
         next();
-        //res.redirect('/sessions/new');
+        //res.redirect('/login');
     }
 }
 
@@ -211,16 +211,16 @@ function authenticateFromLoginToken(req, res, next) {
             } else {
                 // Shouldn't we delete the login token?
                 console.log("Couldn't find user with login tokens: " + token);
-                res.redirect('/sessions/new');
+                res.redirect('/login');
             }
         });
     }));
 }
 
 // Sessions
-app.get('/sessions/new', function(req, res) {
+app.get('/login/?', function(req, res) {
     res.render('sessions/new', {
-        locals: { user: new User(), title: "Log In"  }
+        locals: { user: new User(), title: "Log In" }
     });
 });
 
@@ -247,19 +247,20 @@ app.post('/sessions', function(req, res) {
         } else {
             console.log("Incorrect login details");
             //req.flash('error', 'Incorrect credentials');
-            res.redirect('/sessions/new');
+            res.redirect('/login/');
         }
     });
 });
 
 // logout
-app.del('/sessions', loadUser, function(req, res) {
+// TODO: This should be a del method, but not sure how to make link with del action
+app.get('/logout', loadUser, function(req, res) {
     if (req.session) {
         LoginToken.remove({ email: req.currentUser.email }, function() {});
         res.clearCookie('logintoken');
         req.session.destroy(function() {});
     }
-    res.redirect('/sessions/new');
+    res.redirect('/login');
 });
 
 
@@ -269,7 +270,15 @@ app.del('/sessions', loadUser, function(req, res) {
 
 app.get('/', loadUser, function(req, res, next) {
     if (req.param('q')) {
-        searchProvider.search(req.param('q'), function( error, results) {
+        var pg = parseInt(req.param('pg'));
+        var pp = parseInt(req.param('pp'));
+        var page     = pg ? pg : 1;
+        var per_page = pp ? pp : 20;
+        searchProvider.search(
+            req.param('q'),
+            page,
+            per_page,
+            function( error, results) {
             res.render('search', {
                 locals: {
                     results: results,
@@ -281,7 +290,6 @@ app.get('/', loadUser, function(req, res, next) {
     }
     else {
         res.render('index', {
-            debug: true,
             title: 'Korean dictionary',
             locals: { // hacky
                 q: ''
@@ -309,7 +317,8 @@ app.get('/entries/recent', loadUser, function(req, res) {
 });
 */
 
-app.get('/entries/new', loadUser, function(req, res) {
+app.get('/entries/new/?', loadUser, function(req, res) {
+    console.log("Entries new");
     if (!req.currentUser) {
         console.log("User not logged in, sending to session new");
         res.redirect('/session/new');
@@ -408,12 +417,10 @@ app.get('/entries/:id.:format?', loadUser, function(req, res, next) {
 // Edit entry
 app.get('/entries/:id.:format?/edit', loadUser, function(req, res, next) {
     // Want to require login, not sure if this is the best way but it'll do for now
-    /*
     if (!req.currentUser) {
         console.log("Not logged in");
         res.redirect('/entries/' + req.params.id);
     }
-    */
 
     console.log("Trying to edit something. Delicious");
     Entry.findOne( { _id: req.params.id }, function(err, entry) {
@@ -432,12 +439,19 @@ app.get('/entries/:id.:format?/edit', loadUser, function(req, res, next) {
 // Update Entry
 app.put('/entries/:id.:format?', loadUser, function(req, res, next) {
     console.log("Trying to update document");
+    if (!req.currentUser) {
+        console.log("Not logged in");
+        res.redirect('/entries/' + req.params.id);
+    }
+
     Entry.findOne({ _id: req.params.id }, function(err, entry) {
         if (err) {
             console.log("Save error");
             console.log(err);
         }
         if (!entry) return next(new NotFound('Entry not found'));
+
+        // Difference between old and new entry
 
         console.log("------------------------");
         console.log("Trying to update document");
@@ -451,10 +465,26 @@ app.put('/entries/:id.:format?', loadUser, function(req, res, next) {
         console.log("Req params:");
         console.log(req.params);
 
-        entry.korean.word          = req.body.entry.korean;
-        entry.korean.length        = req.body.entry.korean.length;
-        entry.hanja                = req.body.entry.hanja;
-        entry.definitions.english  = [ req.body.entry.english ];
+        var change = {};
+        if (entry.korean.word != req.body.entry.korean) {
+            change.korean.word   = req.body.entry.korean;
+            change.korean.length = req.body.entry.korean.length;
+        }
+
+        if (entry.hanja != req.body.entry.hanja) {
+            change.hanja = req.body.entry.hanja;
+        }
+
+        if (entry.definitions.english != [ req.body.entry.english ]) {
+            change.definitions.english = req.body.entry.english;
+        }
+        // TODO: Add the flupping change
+
+        //entry.hanja                = req.body.entry.hanja;
+
+        console.log("------------------------");
+        console.log("Changes:");
+        console.log(changes);
 
         console.log("------------------------");
         console.log("Updated entry:");
@@ -465,6 +495,21 @@ app.put('/entries/:id.:format?', loadUser, function(req, res, next) {
                 console.log("Save error");
                 console.log(err);
             }
+            else {
+                // Create Update entry of same contents
+                var update = new Update();
+                update.change = change;
+                update.user_id = currentUser._id;
+                update.word_id = entry._id;
+                entry.save(function(err) {
+                    if (err) {
+                        console.log("Save error");
+                        console.log(err);
+                    }
+                });
+            }
+
+
             switch (req.params.format) {
                 case 'json':
                     res.send(entry.toObject());
@@ -506,7 +551,7 @@ app.del('/entries/:id.:format?', loadUser, function(req, res, next) {
 //////// USER CONTENTS
 
 
-app.get('/users/new', function(req, res) {
+app.get('/signup/?', function(req, res) {
     res.render('users/new', {
         locals: { user: new User(), title: 'Sign Up' }
     });
@@ -530,7 +575,9 @@ app.post('/users.:format?', function(req, res) {
             return userSaveFailed();
         }
 
-        console.log('Save complete')
+
+        console.log('Save complete');
+        emails.sendConfirmation(user);
 
         // TODO
         //req.flash('info', 'Your account has been created');
@@ -561,9 +608,9 @@ app.get('/about/?', function(req, res){
         title: 'About'
     });
 });
-app.get('/help/?', function(req, res){
-    res.render('help', {
-        title: 'Help Out'
+app.get('/contribute/?', function(req, res){
+    res.render('help', { // TODO Change filename to contribute
+        title: 'Contribute'
     });
 });
 app.get('/download/?', function(req, res){

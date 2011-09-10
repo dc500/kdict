@@ -8,6 +8,9 @@ html
     link(rel='stylesheet', href='/stylesheets/style.css')
     link(rel='stylesheet', href='/stylesheets/fonts.css')
     link(rel='shortcut icon', href='favicon.ico')
+    // TODO: iOS shortcut icon
+    link(rel='apple-touch-icon', href='images/ios.png')
+
     script(src='/javascripts/jquery-1.6.2.min.js')
     script(src='/javascripts/korean.js')
     script(src='/javascripts/gui.js')
@@ -18,29 +21,28 @@ html
       #menu
         ul.right
           - if (typeof currentUser !== 'undefined')
-            li= currentUser.email
-              &nbsp; 
-              a(href='/sessions') (Log Out)
+            li.username= currentUser.username
+            li
+              a(href='/logout', class='logout') Log Out
           - else
             li
-              a(href='/sessions/new') Login
-
+              a(href='/signup', class='signup') Sign up
+            li
+              a(href='/login', class='login') Login
 
         ul
           li
             a(href='/') Search
           li
-            a(href='/help/') Help Out
+            a(href='/contribute/') Contribute
           li
             a(href='/download/') Download
           li
-            a(href='/about/') About
-          li
             a(href="/entries/new") + Add Entry
-
-
 
       !=body
 
       #footer
-        p KDict is great
+        ul
+          li
+            a(href='/about/') About

@@ -19,7 +19,7 @@ SearchProvider.prototype.getCollection = function(callback) {
 };
 
 
-SearchProvider.prototype.search = function(query, callback) {
+SearchProvider.prototype.search = function(query, page, per_page, callback) {
     if (!query) {
         callback(null, null);
     }
@@ -38,8 +38,12 @@ SearchProvider.prototype.search = function(query, callback) {
                     language = 'English';
                     //order = 'definitions.english.length';
                 }
-                var limit = 20;
-                var skip = 0;
+                var limit = per_page;
+                var skip = (page-1) * per_page;
+                console.log("Getting page " + page + ", limit " + limit + " skip " + skip);
+                var range = 10;
+
+
                 var cursor = dict_collection.find( obj ).limit(limit).skip(skip).sort(order);
                 cursor.count(function(error, count){
                     if (error) callback(error)
@@ -47,10 +51,21 @@ SearchProvider.prototype.search = function(query, callback) {
                         cursor.toArray(function(error, entries) {
                             if (error) callback(error)
                             else {
+
+                                var total_pages =  Math.ceil(count / per_page);
+                                var min_page = (page - range) < 1 ? 1 : (page - range);
+                                var max_page = (page + range) > total_pages ? total_pages : (page + range);
                                 results = {
-                                    'language': language,
-                                    'entries':  entries,
-                                    'count':    count,
+                                    'language':     language,
+                                    'entries':      entries,
+                                    'query':        query,
+                                    'count':        count,
+                                    'per_page':     per_page,
+                                    'range':        (skip+1) + "-" + (skip+per_page),
+                                    'current_page': page,
+                                    'total_pages':  total_pages,
+                                    'min_page':     min_page,
+                                    'max_page':     max_page,
                                 };
                                 console.log("Results!");
                                 callback(null, results);

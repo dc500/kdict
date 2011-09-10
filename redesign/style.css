@@ -4,16 +4,10 @@ body {
   margin: 0;
   font-family: sans-serif;
 }
-p {
-  font-size: 0.9em;
-}
 #center {
   margin: 0 auto;
   padding: 0;
-  width: 890px;
-}
-.light {
-  color: #999;
+  width: 720px;
 }
 h1.title {
   margin: 15px 0 0 20px;
@@ -32,87 +26,66 @@ h3 a,
 h4 a {
   text-decoration: none;
 }
+
+#searchbox
+
 input:hover,
 input:focus {
+  border: 1px solid #888 !important;
   color: #333 !important;
   outline: none;
   background-color: #fff !important;
 }
-#searchbox {
-  width: 840px;
-  margin: 0 auto;
-}
+
 input.search {
-  margin: 0;
-  padding: 3px;
+  border: 1px solid #ddd;
   border-right: none;
-  border-left: 1px solid #ddd;
-  border-top: 1px solid #ddd;
-  border-bottom: 1px solid #ddd;
   border-color: #888;
   background: #f5f5f5;
   color: #999;
   font-size: 3em;
-  width: 740px;
-  -webkit-border-top-left-radius: 6px;
-  -webkit-border-bottom-left-radius: 6px;
-  -moz-border-radius-topleft: 6px;
-  -moz-border-radius-bottomleft: 6px;
-  border-top-left-radius: 6px;
-  border-bottom-left-radius: 6px;
+  padding: 6px 14px;
+  width: 640px;
+  margin: 0;
+-webkit-border-top-left-radius: 8px;
+-webkit-border-bottom-left-radius: 8px;
+-moz-border-radius-topleft: 8px;
+-moz-border-radius-bottomleft: 8px;
+border-top-left-radius: 8px;
+border-bottom-left-radius: 8px;
+  
 }
 input.search-button {
   margin: 0;
-  padding: 3px;
-  background: #fff;
-  color: #999;
-  font-size: 3em;
   border: 1px solid #ddd;
   border-left: 1px dotted #ddd;
   border-color: #888;
-  -webkit-border-top-right-radius: 6px;
-  -webkit-border-bottom-right-radius: 6px;
-  -moz-border-radius-topright: 6px;
-  -moz-border-radius-bottomright: 6px;
-  border-top-right-radius: 6px;
-  border-bottom-right-radius: 6px;
+  background: #fff;
+  color: #999;
+  font-size: 3em;
+  padding: 4px 10px;
+-webkit-border-top-right-radius: 8px;
+-webkit-border-bottom-right-radius: 8px;
+-moz-border-radius-topright: 8px;
+-moz-border-radius-bottomright: 8px;
+border-top-right-radius: 8px;
+border-bottom-right-radius: 8px;
 }
+
 p.suggest {
   color: #999;
   font-size: 0.7em;
   margin: 0;
   padding: 0;
 }
-ul.pagination {
-  list-style: none;
-}
-ul.pagination li {
-  display: inline;
-  font-size: 0.8em;
-  color: #999;
-}
-ul.pagination li a {
-  border: 1px solid #eee;
-  margin: 3px;
-  padding: 2px 4px;
-  text-decoration: none;
-}
-ul.pagination li a:hover {
-  border: 1px solid #bbb;
-}
-li.fontface {
+
+.fontface {
   font-family: ChunkFiveRegular;
 }
+
 h1.fontface {
 /*font-family ChunkFiveRegular*/
   font: 60px/68px ChunkFiveRegular, Arial, sans-serif;
-  letter-spacing: 0;
-}
-h2.fontface {
-/*font-family ChunkFiveRegular*/
-  font: 36px/40px ChunkFiveRegular, Arial, sans-serif;
-  margin: 0;
-  padding: 0;
   letter-spacing: 0;
 }
 #menu {
@@ -156,30 +129,21 @@ table tr td {
   padding: 2px 4px;
 }
 .result {
-  border-top: 1px solid #ddd;
+  border-top: 1px solid #bbb;
   margin: 5px;
-  padding: 20px 10px;
+  padding: 8px;
 }
 .result .korean {
-  width: 200px;
+  width: 150px;
 }
-.result .definitions ul {
-  margin: 3px 5px 10px 5px;
-  padding: 0;
+
+.result .definitions {
+    margin: -30px 0 0 100px;
+    border-left: 1px dotted #bbb;
 }
+
 .result .definitions li {
-  margin: 0;
-  padding: 5px 10px;
   list-style: none;
-}
-.result .left {
-  float: left;
-  width: 180px;
-}
-.result .right {
-  float: right;
-  width: 650px;
-  border-left: 1px solid #ddd;
 }
 .result .edit {
   float: right;
@@ -190,20 +154,52 @@ table tr td {
   margin: 0;
   font-size: 0.7em;
 }
-.result-break {
-  clear: both;
-}
 .result h3 {
   margin: 0;
   padding: 0;
 }
-input {
-  border: 1px solid #bbb;
-}
+
 #footer {
-  border-top: 1px solid #aaa;
+    border-top: 1px solid #aaa;
 }
 #footer ul li {
+    display: inline;
+    color: #aaa;
+}
+
+
+
+
+ul.tabs {
+  margin: 0;
+  padding: 0;
+}
+ul.tabs li {
+  list-style: none;
   display: inline;
-  color: #aaa;
+  margin: 0;
+  padding: 0;
+}
+ul.tabs li a {
+  margin: 0 -10px 0 0;
+  padding: 4px 15px;
+  text-decoration: none;
+  font-size: 1.2em;
+  font-weight: bold;
+  background: #f5f5f5;
+  color: #999;
+/*font-family ChunkFiveRegular*/
+  border: 1px solid #999;
+  border-bottom: 0;
+  -webkit-border-top-left-radius: 8px;
+  -webkit-border-top-right-radius: 8px;
+  -moz-border-radius-topleft: 8px;
+  -moz-border-radius-topright: 8px;
+  border-top-left-radius: 8px;
+  border-top-right-radius: 8px;
+}
+
+ul.tabs li a:hover {
+    background: #fff;
+    z-index: -1;
 }

@@ -3,8 +3,26 @@
 
 var crypto = require('crypto'),
     Entry,
+    Update,
     User,
     LoginToken;
+
+
+
+function validateNonEnglish(value) {
+    return value =~ /[^a-z]/i;
+}
+
+function validatePresenceOf(value) {
+    console.log("Validating presence of '" + value + "'");
+    return value && value.length;
+}
+
+// SO lazy
+function validateRoughEmail(value) {
+    return value =~ /\@/;
+}
+
 
 function defineModels(mongoose, fn) {
     var Schema = mongoose.Schema,
@@ -46,28 +64,59 @@ function defineModels(mongoose, fn) {
 
     Entry.pre('save', function(next) {
         // TODO Automatically generate phonetic representation
+        // Automatically create Update
         next();
     });
 
 
-    function validateNonEnglish(value) {
-        return value =~ /[^a-z]/i;
-    }
 
-    function validatePresenceOf(value) {
-        console.log("Validating presence of '" + value + "'");
-        return value && value.length;
-    }
+
+
+    Update = new Schema({
+        'word_id': {
+            type: ObjectId,
+            index: true,
+            required: true,
+        },
+        'user_id': {
+            type: ObjectId,
+            index: true,
+            required: true,
+        },
+        'change': {
+            type: Schema.Types.Mixed,
+            required: true,
+        }, // anything goes
+        'created_at': { type: Date, default: Date.now, required: true },
+    });
+
+
 
     /**
      * Model: User
      */
 
     User = new Schema({
-        'username': { type: String, validate: [validatePresenceOf, 'a username is required'], index: { unique: true } },
-        'email': { type: String, validate: [validatePresenceOf, 'an email is required'], index: { unique: true } },
-         'hashed_password': String,
-         'salt': String
+        'display_name': {
+            type: String,
+        },
+        'username': {
+            type: String,
+            validate: [
+                validatePresenceOf, 'a username is required',
+            ],
+            index: { unique: true }
+        },
+        'email': {
+            type: String,
+            validate: [
+                validatePresenceOf, 'an email is required',
+                validateRoughEmail, 'email does not look like an email',
+            ],
+            index: { unique: true }
+        },
+        'hashed_password': String,
+        'salt': String
     });
 
     User.virtual('id')
