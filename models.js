@@ -159,7 +159,6 @@ function defineModels(mongoose, fn) {
     /**
      * Model: LoginToken
      * Used for session persistence.
-     */
     LoginToken = new Schema({
         email: { type: String, index: true },
                series: { type: String, index: true },
@@ -189,11 +188,12 @@ function defineModels(mongoose, fn) {
         .get(function() {
             return JSON.stringify({ email: this.email, token: this.token, series: this.series });
         });
+*/
 
     mongoose.model('Entry',      Entry);
     mongoose.model('Update',     Update);
     mongoose.model('User',       User);
-    mongoose.model('LoginToken', LoginToken);
+    //mongoose.model('LoginToken', LoginToken);
 
     fn();
 }

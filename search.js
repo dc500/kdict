@@ -4,6 +4,8 @@ var Server     = require('mongodb').Server;
 var BSON       = require('mongodb').BSON;
 var ObjectID   = require('mongodb').ObjectID;
 
+var korean = require('./public/javascripts/korean.js');
+
 
 SearchProvider = function(host, port) {
   this.db = new Db('kdict', new Server(host, port, {auto_reconnect: true}, {}));
@@ -29,13 +31,31 @@ SearchProvider.prototype.search = function(query, page, per_page, callback) {
             else {
                 var re = new RegExp(query, 'i');
 
-                var obj = { 'korean.word' : re };
-                var language = 'Korean';
+                var obj;
+                var language;
+
+                console.log("What");
+                switch(korean.detect_characters(query)) {
+                    case 'korean':
+                        obj = { 'korean.word' : re };
+                        language = 'Korean';
+                        break;
+                    case 'english':
+                        obj = { 'definitions.english' : re };
+                        language = 'English';
+                        break;
+                    case 'hanja':
+                        obj = { 'hanja' : re };
+                        language = 'Hanja';
+                        break;
+                    default:
+                        callback(null, null);
+                }
+                console.log(language);
+
                 var order = 'korean.length';
                 // Trying to work out if it's korean or not
                 if (query.match(/^[a-z0-9 -.,]/)) {
-                    obj = { 'definitions.english' : re };
-                    language = 'English';
                     //order = 'definitions.english.length';
                 }
                 var limit = per_page;
