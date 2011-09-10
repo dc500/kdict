@@ -190,11 +190,12 @@ app.error(function(err, req, res, next) {
 
 
 
-app.get('/logout', function(req, res){
+app.get('/logout/?', function(req, res){
     // destroy the user's session to log them out
     // will be re-created next request
     req.session.destroy(function(){
-        req.flash('info', 'Logged out');
+        // TODO flash requires sessions
+        //req.flash('info', 'Logged out');
         res.redirect('/');
     });
 });
@@ -339,7 +340,7 @@ app.post('/entries.:format?', requireLogin, function(req, res) {
                 break;
 
             default:
-                //req.flash('info', 'Entry created');
+                req.flash('info', 'Entry created');
 
                 console.log("Entry created");
                 res.redirect('/entries/' + entry._id);
@@ -470,7 +471,7 @@ app.put('/entries/:id.:format?', requireLogin, function(req, res, next) {
                     break;
 
                 default:
-                    //req.flash('info', 'Entry updated');
+                    req.flash('info', 'Entry updated');
                     res.redirect('/entries/' + req.params.id );
             }
         });
@@ -489,7 +490,7 @@ app.del('/entries/:id.:format?', requireLogin, function(req, res, next) {
                     break;
 
                 default:
-                    //req.flash('info', 'entry deleted');
+                    req.flash('info', 'entry deleted');
                     res.redirect('/');
             }
         });
@@ -517,7 +518,7 @@ app.post('/users.:format?', function(req, res) {
 
     function userSaveFailed() {
         console.log('Save failed')
-        //req.flash('error', 'Account creation failed');
+        req.flash('error', 'Account creation failed');
         res.render('users/new', {
             locals: { user: user }
         });
@@ -534,7 +535,7 @@ app.post('/users.:format?', function(req, res) {
         emails.sendConfirmation(user);
 
         // TODO
-        //req.flash('info', 'Your account has been created');
+        req.flash('info', 'Your account has been created');
         //emails.sendWelcome(user);
 
         switch (req.params.format) {
