@@ -14,6 +14,7 @@ var express        = require('express'),
     sys            = require('sys'),
     path           = require('path'),
     models         = require('./models'),
+    globMessages = require('express-messages'),
     db,
     Entry,
     User,
@@ -103,6 +104,14 @@ app.configure(function(){
     });
 });
 
+app.dynamicHelpers({
+    currentUser: function(req, res) {
+        return req.session.user;
+        return req.currentUser;
+    },
+    messages: globMessages,
+});
+
 // TODO move
 function hash(msg, key) {
   return crypto.createHmac('sha256', key).update(msg).digest('hex');
@@ -152,15 +161,6 @@ app.configure('test', function() {
 var searchProvider = new SearchProvider('localhost', 27017);
 
 // Hmm
-app.dynamicHelpers({
-    currentUser: function(req, res) {
-        return req.session.user;
-        return req.currentUser;
-    },
-    flash: function(req,res) {
-        return req.flash();
-    }
-});
 
 
 
@@ -194,6 +194,7 @@ app.get('/logout', function(req, res){
     // destroy the user's session to log them out
     // will be re-created next request
     req.session.destroy(function(){
+        req.flash('info', 'Logged out');
         res.redirect('/');
     });
 });
@@ -217,6 +218,7 @@ app.post('/login/?', function(req, res){
             // Regenerate session when signing in
             // to prevent fixation 
             req.session.regenerate(function(){
+                req.flash('info', 'Logged in');
                 console.log("Regenerated session");
                 // Store the user's primary key 
                 // in the session store to be retrieved,
@@ -225,6 +227,7 @@ app.post('/login/?', function(req, res){
                 res.redirect('/');
             });
         } else {
+            req.flash('error', 'Could not find user');
             console.log("Couldn't find user");
             req.session.error = 'Authentication failed, please check your '
                 + ' username and password.'
@@ -238,6 +241,7 @@ app.post('/login/?', function(req, res){
 
 
 
+// Basic searching
 
 app.get('/', function(req, res, next) {
     if (req.param('q')) {
@@ -250,16 +254,16 @@ app.get('/', function(req, res, next) {
             page,
             per_page,
             function( error, results) {
-            res.render('search', {
-                locals: {
-                    results: results,
-                    q: req.param('q')
-                },
-                title: "'" + req.param('q') + "'"
-            });
-        });
-    }
-    else {
+                res.render('search', {
+                    locals: {
+                        results: results,
+                        q: req.param('q')
+                    },
+                    title: "'" + req.param('q') + "'"
+                });
+            }
+        );
+    } else {
         res.render('index', {
             title: 'Korean dictionary',
             locals: { // hacky

@@ -83,6 +83,12 @@ p.suggest {
   margin: 0;
   padding: 0;
 }
+ul.info li {
+  color: #3c6;
+}
+ul.error li {
+  color: #d44;
+}
 ul.pagination {
   list-style: none;
 }
