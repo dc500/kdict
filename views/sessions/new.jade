@@ -3,14 +3,14 @@ h1.fontface= title
 p
   a.button(href='/signup') Create an account &rarr;
 
-form.users#login(method='post', action='/sessions')
+form.users#login(method='post', action='/login')
   div
     label Email:
-    input(name='user[email]', value=user.email || '')
+    input(name='user[email]')
 
   div
     label Password:
-    input(name='user[password]', value=user.password || '', type='password')
+    input(name='user[password]', type='password')
 
   div
     label(for='remember_me') Remember me:

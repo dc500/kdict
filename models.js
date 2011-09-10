@@ -124,6 +124,7 @@ function defineModels(mongoose, fn) {
             return this._id.toHexString();
         });
 
+    
     User.virtual('password')
         .set(function(password) {
             this._password = password;
@@ -132,17 +133,18 @@ function defineModels(mongoose, fn) {
         })
     .get(function() { return this._password; });
 
-    User.method('authenticate', function(plainText) {
-        return this.encryptPassword(plainText) === this.hashed_password;
-    });
-
     User.method('makeSalt', function() {
         return Math.round((new Date().valueOf() * Math.random())) + '';
     });
 
-    User.method('encryptPassword', function(password) {
-        return crypto.createHmac('sha1', this.salt).update(password).digest('hex');
+    
+    User.method('authenticate', function(plainText) {
+        return this.encryptPassword(plainText) === this.hashed_password;
     });
+    User.method('encryptPassword', function(password) {
+        return crypto.createHmac('sha256', this.salt).update(password).digest('hex');
+    });
+    
 
     User.pre('save', function(next) {
         if (!validatePresenceOf(this.password)) {
@@ -188,14 +190,13 @@ function defineModels(mongoose, fn) {
             return JSON.stringify({ email: this.email, token: this.token, series: this.series });
         });
 
-    mongoose.model('Entry', Entry);
-    mongoose.model('User', User);
+    mongoose.model('Entry',      Entry);
+    mongoose.model('Update',     Update);
+    mongoose.model('User',       User);
     mongoose.model('LoginToken', LoginToken);
 
     fn();
 }
 
 exports.defineModels = defineModels; 
-
-
 

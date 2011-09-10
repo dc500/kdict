@@ -2,23 +2,22 @@
 var express = require('express');
 var SearchProvider = require('./search').SearchProvider;
 
-var express = require('express'),
-    connect = require('connect'),
-    jade = require('jade'),
-    app = module.exports = express.createServer(),
-    mongoose = require('mongoose'),
-    mongoStore = require('connect-mongodb'),
-    mailer = require('mailer'),
-    stylus = require('stylus'),
-    //markdown = require('markdown').markdown,
+var express        = require('express'),
+    connect        = require('connect'),
+    jade           = require('jade'),
+    app            = module.exports = express.createServer(),
+    mongoose       = require('mongoose'),
+    mongoStore     = require('connect-mongodb'),
+    mailer         = require('mailer'),
+    stylus         = require('stylus'),
     connectTimeout = require('connect-timeout'),
-    sys = require('sys'),
-    path = require('path'),
-    models = require('./models'),
+    sys            = require('sys'),
+    path           = require('path'),
+    models         = require('./models'),
     db,
     Entry,
     User,
-    LoginToken,
+    //LoginToken,
     Settings = { development: {}, test: {}, production: {} },
     emails;
 
@@ -65,6 +64,11 @@ emails = {
 
 var app = module.exports = express.createServer();
 
+
+//new
+//var MemStore = require('connect/middleware/session/memory');
+
+
 // Config
 app.configure(function(){
     app.set('views', __dirname + '/views');
@@ -73,12 +77,16 @@ app.configure(function(){
     app.use(express.bodyParser());
     app.use(express.cookieParser());
     app.use(connectTimeout({ time: 10000 }));
-    app.use(express.session({ store: mongoStore(app.set('db-uri')), secret: 'topsecret' }));
+    app.use(express.session({ store: mongoStore(app.set('db-uri')), secret: 'kingofnopants' }));
     app.use(express.logger({ format: '\x1b[1m:method\x1b[0m \x1b[33m:url\x1b[0m :response-time ms' }))
     app.use(express.methodOverride());
     app.use(stylus.middleware({ src: __dirname + '/public' }));
     app.use(express.static(__dirname + '/public'));
 
+
+    //new
+    //app.use(express.cookieDecoder());
+    //app.use(express.session({ store: MemStore( { reapInterval: 60000 * 10 }) });
 /*
    app.set('views', __dirname + '/views');
    app.use(express.favicon(__dirname + '/public/favicon.ico'));
@@ -94,7 +102,35 @@ app.configure(function(){
         from: 'signup@kdict.com'
     });
 });
-    
+
+// TODO move
+function hash(msg, key) {
+  return crypto.createHmac('sha256', key).update(msg).digest('hex');
+}
+function authenticate(email, pass, next) {
+    User.findOne({ email: email }, function(err, user) {
+        // query the db for the given username
+        if (err || !user) return next(new Error('cannot find user'));
+        // apply the same algorithm to the POSTed password, applying
+        // the hash against the pass / salt, if there is a match we
+        // found the user
+        if (user.authenticate) return next(null, user);
+        //if (user.hashed_password == hash(pass, user.salt)) return next(null, user);
+        // Otherwise password is invalid
+        next(new Error('invalid password'));
+    });
+}
+function requireLogin(req, res, next) {
+    if (req.session.user) {
+        next();
+    } else {
+        req.session.error = 'Access denied!';
+        res.redirect('/login');
+    }
+}
+
+
+
 
 app.configure('development', function(){
     app.set('db-uri', 'mongodb://localhost/kdict');
@@ -117,8 +153,12 @@ var searchProvider = new SearchProvider('localhost', 27017);
 
 // Hmm
 app.dynamicHelpers({
-    currentUser: function (req, res) {
+    currentUser: function(req, res) {
+        return req.session.user;
         return req.currentUser;
+    },
+    flash: function(req,res) {
+        return req.flash();
     }
 });
 
@@ -127,8 +167,9 @@ app.dynamicHelpers({
 // Models
 models.defineModels(mongoose, function() {
     app.Entry      = Entry      = mongoose.model('Entry');
+    app.Update     = Update     = mongoose.model('Update');
     app.User       = User       = mongoose.model('User');
-    app.LoginToken = LoginToken = mongoose.model('LoginToken');
+    //app.LoginToken = LoginToken = mongoose.model('LoginToken');
     db = mongoose.connect(app.set('db-uri'));
 });
 
@@ -149,118 +190,48 @@ app.error(function(err, req, res, next) {
 
 
 
-// Attempt to log the user in
-// If fail, continue. Other methods check for currentUser
-function loadUser(req, res, next) {
-    console.log("Loading user");
-    console.log("Current session data " + req.session);
-    if (req.session.user_id) {
-        console.log("Found user id " + req.session.user_id);
-        User.findById(req.session.user_id, function(err, user) {
-            if (user) {
-                req.currentUser = user;
-                next();
-            } else {
-                console.log("Couldn't find user");
-                res.redirect('/login');
-            }
-        });
-    } else if (req.cookies.logintoken) {
-        console.log("Authenticating from login token: " + req.cookies.logintoken);
-        authenticateFromLoginToken(req, res, next);
-    } else {
-        console.log("No session data");
-        next();
-        //res.redirect('/login');
+app.get('/logout', function(req, res){
+    // destroy the user's session to log them out
+    // will be re-created next request
+    req.session.destroy(function(){
+        res.redirect('/');
+    });
+});
+
+app.get('/login/?', function(req, res){
+    // already logged in
+    if (req.session.user) {
+        res.redirect('/');
     }
-}
-
-function authenticateFromLoginToken(req, res, next) {
-    var cookie = JSON.parse(req.cookies.logintoken);
-
-    console.log("");
-    LoginToken.findOne({
-        email: cookie.email,
-        series: cookie.series,
-        token: cookie.token
-    }, (function(err, token) {
-        if (!token) {
-            console.log("Could not find user with: " + cookie.email + " " + cookie.series + " " + cookie.token);
-            // Want to unset this cookie info
-            res.clearCookie('logintoken');
-            
-
-            // Don't want to redirect if they haven't logged in
-            // login is option
-            res.redirect('/');
-            return;
-        }
-
-        console.log("Found login token!");
-
-        User.findOne({ email: token.email }, function(err, user) {
-            if (user) {
-                req.session.user_id = user.id;
-                req.currentUser = user;
-
-                token.token = token.randomToken();
-                token.save(function() {
-                    res.cookie('logintoken', token.cookieValue, { expires: new Date(Date.now() + 2 * 604800000), path: '/' });
-                    next();
-                });
-            } else {
-                // Shouldn't we delete the login token?
-                console.log("Couldn't find user with login tokens: " + token);
-                res.redirect('/login');
-            }
-        });
-    }));
-}
-
-// Sessions
-app.get('/login/?', function(req, res) {
     res.render('sessions/new', {
-        locals: { user: new User(), title: "Log In" }
-    });
-});
-
-// login
-app.post('/sessions', function(req, res) {
-    console.log("Logging user in...");
-    User.findOne({ email: req.body.user.email }, function(err, user) {
-        if (user && user.authenticate(req.body.user.password)) {
-            console.log("Found user: " + user.id);
-            req.session.user_id = user.id;
-
-            // Remember me
-            if (req.body.remember_me) {
-                console.log("Choosing to remember");
-                var loginToken = new LoginToken({ email: user.email });
-                loginToken.save(function() {
-                    res.cookie('logintoken', loginToken.cookieValue, { expires: new Date(Date.now() + 2 * 604800000), path: '/' });
-                    res.redirect('/');
-                });
-            } else {
-                console.log("Choosing to forget");
-                res.redirect('/');
-            }
-        } else {
-            console.log("Incorrect login details");
-            //req.flash('error', 'Incorrect credentials');
-            res.redirect('/login/');
+        locals: {
+            title: 'Login'
         }
     });
 });
 
-// logout
-// TODO: This should be a del method, but not sure how to make link with del action
-app.get('/logout', loadUser, function(req, res) {
-    if (req.session) {
-        LoginToken.remove({ email: req.currentUser.email }, function() {});
-        res.clearCookie('logintoken');
-        req.session.destroy(function() {});
-    }
-    res.redirect('/login');
+app.post('/login/?', function(req, res){
+    authenticate(req.body.user.email, req.body.user.password, function(err, user) {
+        if (user) {
+            console.log("Found user");
+            // Regenerate session when signing in
+            // to prevent fixation 
+            req.session.regenerate(function(){
+                console.log("Regenerated session");
+                // Store the user's primary key 
+                // in the session store to be retrieved,
+                // or in this case the entire user object
+                req.session.user = user;
+                res.redirect('/');
+            });
+        } else {
+            console.log("Couldn't find user");
+            req.session.error = 'Authentication failed, please check your '
+                + ' username and password.'
+                + ' (use "tj" and "foobar")';
+    res.redirect('back');
+        }
+    });
 });
 
 
@@ -268,7 +239,7 @@ app.get('/logout', loadUser, function(req, res) {
 
 
 
-app.get('/', loadUser, function(req, res, next) {
+app.get('/', function(req, res, next) {
     if (req.param('q')) {
         var pg = parseInt(req.param('pg'));
         var pp = parseInt(req.param('pp'));
@@ -309,7 +280,7 @@ app.get('/', loadUser, function(req, res, next) {
 
 ////// ENTRY CONTENTS
 /*
-app.get('/entries/recent', loadUser, function(req, res) {
+app.get('/entries/recent', function(req, res) {
     console.log("Displaying recent changes");
     res.render('entries/recent', {
         locals: { entries: }
@@ -317,27 +288,16 @@ app.get('/entries/recent', loadUser, function(req, res) {
 });
 */
 
-app.get('/entries/new/?', loadUser, function(req, res) {
-    console.log("Entries new");
-    if (!req.currentUser) {
-        console.log("User not logged in, sending to session new");
-        res.redirect('/session/new');
-    }
-
+app.get('/entries/new/?', requireLogin, function(req, res) {
     console.log("Displaying new form");
     res.render('entries/new', {
-        locals: { entry: new Entry(), currentUser: req.currentUser }
+        locals: { entry: new Entry() }
     });
 });
 
 // Create Entry
-app.post('/entries.:format?', loadUser, function(req, res) {
+app.post('/entries.:format?', requireLogin, function(req, res) {
     console.log("Trying to create new entry");
-
-    if (!req.currentUser) {
-        console.log("User not logged in, sending to session new");
-        res.redirect('/session/new');
-    }
 
     console.log(req.body);
 
@@ -384,7 +344,7 @@ app.post('/entries.:format?', loadUser, function(req, res) {
 });
 
 // Read Entry
-app.get('/entries/:id.:format?', loadUser, function(req, res, next) {
+app.get('/entries/:id.:format?', function(req, res, next) {
 
     console.log("Read entry");
 
@@ -415,13 +375,7 @@ app.get('/entries/:id.:format?', loadUser, function(req, res, next) {
 
 
 // Edit entry
-app.get('/entries/:id.:format?/edit', loadUser, function(req, res, next) {
-    // Want to require login, not sure if this is the best way but it'll do for now
-    if (!req.currentUser) {
-        console.log("Not logged in");
-        res.redirect('/entries/' + req.params.id);
-    }
-
+app.get('/entries/:id.:format?/edit', requireLogin, function(req, res, next) {
     console.log("Trying to edit something. Delicious");
     Entry.findOne( { _id: req.params.id }, function(err, entry) {
         if (!entry) return next(new NotFound('Entry not found'));
@@ -437,12 +391,8 @@ app.get('/entries/:id.:format?/edit', loadUser, function(req, res, next) {
 
 
 // Update Entry
-app.put('/entries/:id.:format?', loadUser, function(req, res, next) {
+app.put('/entries/:id.:format?', requireLogin, function(req, res, next) {
     console.log("Trying to update document");
-    if (!req.currentUser) {
-        console.log("Not logged in");
-        res.redirect('/entries/' + req.params.id);
-    }
 
     Entry.findOne({ _id: req.params.id }, function(err, entry) {
         if (err) {
@@ -524,22 +474,22 @@ app.put('/entries/:id.:format?', loadUser, function(req, res, next) {
 });
 
 // Delete entry
-app.del('/entries/:id.:format?', loadUser, function(req, res, next) {
-  Entry.findOne({ _id: req.params.id }, function(err, d) {
-    if (!d) return next(new NotFound('entry not found'));
+app.del('/entries/:id.:format?', requireLogin, function(req, res, next) {
+    Entry.findOne({ _id: req.params.id }, function(err, d) {
+        if (!d) return next(new NotFound('entry not found'));
 
-    d.remove(function() {
-      switch (req.params.format) {
-        case 'json':
-          res.send('true');
-        break;
+        d.remove(function() {
+            switch (req.params.format) {
+                case 'json':
+                    res.send('true');
+                    break;
 
-        default:
-          //req.flash('info', 'entry deleted');
-          res.redirect('/');
-      }
+                default:
+                    //req.flash('info', 'entry deleted');
+                    res.redirect('/');
+            }
+        });
     });
-  });
 });
 
 
