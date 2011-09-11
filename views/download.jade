@@ -22,11 +22,14 @@ h3 Data
 table
   thead
     tr
-      td Date Generated
+      td Date
+      td Filename
+      td Size
     tbody
       - each file in files
         tr
+          td= file.date
           td
             a(href="/data/#{file.name}") #{file.name}
-            | &nbsp;(#{file.size})
+          td= file.size
 

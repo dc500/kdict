@@ -663,12 +663,16 @@ var getFiles = step.fn(
 
         for (var i = 0; i < results.length; i++) {
             var filename = results[i];
+            if (!filename.match(/.tar$/)) {
+                continue;
+            }
             var p = path.join(__dirname, 'data', filename);
             
             // TODO make asynchronous
             var stats = fs.statSync(p);
 
-            files.push( { name: filename, size: getTextFilesize(stats.size) } );
+            // TODO Formatting
+            files.push( { name: filename, size: getTextFilesize(stats.size), date: stats.mtime } );
         }
         return files;
     }
