@@ -108,7 +108,7 @@ app.configure(function(){
 app.dynamicHelpers({
     currentUser: function(req, res) {
         return req.session.user;
-        return req.currentUser;
+        //return req.currentUser;
     },
     messages: require('express-messages'),
 });
@@ -134,7 +134,7 @@ function requireLogin(req, res, next) {
     if (req.session.user) {
         next();
     } else {
-        req.session.error = 'Access denied!';
+        req.flash('error', 'Login required');
         res.redirect('/login');
     }
 }
@@ -245,19 +245,22 @@ app.post('/login/?', function(req, res){
 
 
 
+// TODO There HAS to be a nicer way to do this
+function isEmpty(obj) {
+    for(var prop in obj) {
+        if(obj.hasOwnProperty(prop))
+            return false;
+    }
+    return true;
+}
+
 
 // Basic searching
 
 app.get('/', function(req, res, next) {
-    if (req.param('q')) {
-        var pg = parseInt(req.param('pg'));
-        var pp = parseInt(req.param('pp'));
-        var page     = pg ? pg : 1;
-        var per_page = pp ? pp : 20;
+    if (!isEmpty(req.query)) {
         searchProvider.search(
-            req.param('q'),
-            page,
-            per_page,
+            req.query,
             function( error, results) {
                 res.render('search', {
                     locals: {
@@ -305,7 +308,7 @@ app.get('/entries/new/?', requireLogin, function(req, res) {
 });
 
 // Create Entry
-app.post('/entries.:format?', requireLogin, function(req, res) {
+app.post('/entries/?', requireLogin, function(req, res) {
     console.log("Trying to create new entry");
 
     console.log(req.body);
@@ -325,7 +328,7 @@ app.post('/entries.:format?', requireLogin, function(req, res) {
     // TODO Doing it the above way until I work out what's going wrong
     //var entry = new Entry(req.body.entry);
 
-    entry.user_id = req.currentUser._id;
+    entry.user_id = req.session.user._id;
 
     console.log("Saving...");
     console.log(entry);
@@ -367,16 +370,9 @@ app.get('/entries/:id.:format?', function(req, res, next) {
             case 'json':
                 res.send(entry.toObject());
                 break;
-
-                /*
-            case 'html':
-                res.send(markdown.toHTML(d.data));
-                break;
-                */
-
             default:
                 res.render('entries/show', {
-                    locals: { entry: entry, currentUser: req.currentUser }
+                    locals: { entry: entry, title: entry.korean.word }
                 });
         }
     });
@@ -393,7 +389,7 @@ app.get('/entries/:id.:format?/edit', requireLogin, function(req, res, next) {
         console.log(entry);
 
         res.render('entries/edit', {
-            locals: { entry: entry, currentUser: req.currentUser }
+            locals: { entry: entry }
         });
     });
 });
@@ -426,6 +422,7 @@ app.put('/entries/:id.:format?', requireLogin, function(req, res, next) {
 
         var change = {};
         if (entry.korean.word != req.body.entry.korean) {
+            change.korean = {};
             change.korean.word   = req.body.entry.korean;
             change.korean.length = req.body.entry.korean.length;
         }
@@ -435,15 +432,16 @@ app.put('/entries/:id.:format?', requireLogin, function(req, res, next) {
         }
 
         if (entry.definitions.english != [ req.body.entry.english ]) {
+            change.definitions = {};
             change.definitions.english = req.body.entry.english;
         }
+        
         // TODO: Add the flupping change
-
-        //entry.hanja                = req.body.entry.hanja;
+        entry.hanja                = req.body.entry.hanja;
 
         console.log("------------------------");
         console.log("Changes:");
-        console.log(changes);
+        console.log(change);
 
         console.log("------------------------");
         console.log("Updated entry:");
@@ -458,9 +456,9 @@ app.put('/entries/:id.:format?', requireLogin, function(req, res, next) {
                 // Create Update entry of same contents
                 var update = new Update();
                 update.change = change;
-                update.user_id = currentUser._id;
+                update.user_id = req.session.user._id;
                 update.word_id = entry._id;
-                entry.save(function(err) {
+                update.save(function(err) {
                     if (err) {
                         console.log("Save error");
                         console.log(err);
@@ -606,9 +604,29 @@ app.get('/about/?', function(req, res){
     });
 });
 app.get('/contribute/?', function(req, res){
-    res.render('help', { // TODO Change filename to contribute
+    res.render('contribute', { // TODO Change filename to contribute
         title: 'Contribute'
     });
+});
+app.get('/contribute/flagged?', function(req, res){
+    if (req.param('q')) {
+        searchProvider.searchFlag(
+            req.param('q'),
+            function(error, results) {
+                res.render('contribute/flagged', { // TODO Change filename to contribute
+                    flags: flags,
+                    title: 'Flagged Entries'
+                });
+            }
+        );
+    } else {
+        searchProvider.getFlags( function(error, flags) {
+            res.render('contribute/flagged', { // TODO Change filename to contribute
+                flags: flags,
+                title: 'Flagged Entries'
+            });
+        });
+    }
 });
 
 

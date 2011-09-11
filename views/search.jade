@@ -5,6 +5,7 @@ p Showing page #{results.current_page} of #{results.total_pages} (#{results.rang
 - if (results.entries.length > 0)
   != partial('result', results.entries)
     // Want to show the 10 either side of the thing
+    // TODO Partial rendering
     ul.pagination
       li 
         a(href="/?q=#{results.query}") First

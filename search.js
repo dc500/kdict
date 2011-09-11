@@ -21,50 +21,89 @@ SearchProvider.prototype.getCollection = function(callback) {
 };
 
 
-SearchProvider.prototype.search = function(query, page, per_page, callback) {
-    if (!query) {
+SearchProvider.prototype.getFlags = function(callback) {
+    this.getCollection(function(error, dict_collection) {
+        dict_collection.distinct( "flags", function(error, results) {
+            // The results are usually a mess of nested flags
+            // TODO fix this hack
+
+            //console.log(results);
+            var flags = {};
+            for (var i in results) {
+                var elem = results[i];
+                //console.log("elem " + i + " " + elem);
+                if (elem instanceof Array) {
+                    for (var j in elem) {
+                        var elem2 = elem[j];
+                        //console.log("elem2 " + j + " " + elem2);
+                        flags[elem2] = 1;
+                    }
+                } else {
+                    flags[elem] = 1;
+                }
+            }
+
+            var keys = [];
+            for(var i in flags) { //if (this.hasOwnProperty(i)) {
+                //console.log(i);
+                keys.push(i);
+            }
+            callback( null, keys );
+        });
+    });
+};
+
+
+SearchProvider.prototype.search = function(params, callback) {
+    if (!params) {
         callback(null, null);
-    }
-    else {
+    } else {
         this.getCollection(function(error, dict_collection) {
             if (error) callback(error)
             else {
-                var re = new RegExp(query, 'i');
+                var query = {};
+                // Parse each param
 
-                var obj;
-                var language;
+                var page     = 1;
+                var per_page = 20;
+                for (var key in params) {
+                    var val = params[key];
+                    console.log('key: ' + key + ', val: ' + val);
+                    // treat each one individually
+                    switch(key) {
+                        case 'q':
+                            var keyval = generalString(val);
+                            query[keyval[0]] = keyval[1];
+                            break;
+                        case 'flag':
+                            var re = new RegExp(val, 'i');
+                            query['flags'] = re;
+                            break;
 
-                console.log("What");
-                switch(korean.detect_characters(query)) {
-                    case 'korean':
-                        obj = { 'korean.word' : re };
-                        language = 'Korean';
-                        break;
-                    case 'english':
-                        obj = { 'definitions.english' : re };
-                        language = 'English';
-                        break;
-                    case 'hanja':
-                        obj = { 'hanja' : re };
-                        language = 'Hanja';
-                        break;
-                    default:
-                        callback(null, null);
+                        case 'pos':
+                            query['pos'] = val;
+                            break;
+
+                        case 'pg':
+                            page = parseInt(val);
+                            break;
+                        case 'pp':
+                            pp = parseInt(val);
+                            break;
+                        
+                        default:
+                            console.log("Unknown key, not going to be processing this");
+                            break;
+                    }
                 }
-                console.log(language);
 
                 var order = 'korean.length';
-                // Trying to work out if it's korean or not
-                if (query.match(/^[a-z0-9 -.,]/)) {
-                    //order = 'definitions.english.length';
-                }
                 var limit = per_page;
                 var skip = (page-1) * per_page;
                 console.log("Getting page " + page + ", limit " + limit + " skip " + skip);
                 var range = 10;
 
-
-                var cursor = dict_collection.find( obj ).limit(limit).skip(skip).sort(order);
+                var cursor = dict_collection.find( query ).limit(limit).skip(skip).sort(order);
                 cursor.count(function(error, count){
                     if (error) callback(error)
                     else {
@@ -72,11 +111,10 @@ SearchProvider.prototype.search = function(query, page, per_page, callback) {
                             if (error) callback(error)
                             else {
 
-                                var total_pages =  Math.ceil(count / per_page);
+                                var total_pages = Math.ceil(count / per_page);
                                 var min_page = (page - range) < 1 ? 1 : (page - range);
                                 var max_page = (page + range) > total_pages ? total_pages : (page + range);
                                 results = {
-                                    'language':     language,
                                     'entries':      entries,
                                     'query':        query,
                                     'count':        count,
@@ -87,7 +125,6 @@ SearchProvider.prototype.search = function(query, page, per_page, callback) {
                                     'min_page':     min_page,
                                     'max_page':     max_page,
                                 };
-                                console.log("Results!");
                                 callback(null, results);
                             }
                         });
@@ -96,6 +133,26 @@ SearchProvider.prototype.search = function(query, page, per_page, callback) {
             }
         });
     }
+};
+
+// The following methods all pre-parse various parameters
+function generalString( query ) {
+    var key;
+    var val = new RegExp(query, 'i');
+
+    switch(korean.detect_characters(query)) {
+        case 'korean':
+            key = 'korean.word';
+            break;
+        case 'english':
+            key = 'definitions.english';
+            break;
+        case 'hanja':
+            key = 'hanja';
+            break;
+        default:
+    }
+    return [key, val];
 };
 
 exports.SearchProvider = SearchProvider;

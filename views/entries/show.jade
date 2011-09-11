@@ -7,7 +7,8 @@ p
   - if (typeof currentUser !== 'undefined')
     a(href='/entries/#{entry._id}/edit') Edit
   - else
-    p (Login to edit)
+    p 
+      a(href='/login') Login to edit
 
 p Hanja: #{entry.hanja}
 

@@ -1,0 +1,10 @@
+h1.fontface= title
+
+p The following are flags in the database. Choose one to see items marked with it.
+
+ul
+  - each flag in flags
+    li
+      a(href="/?flag=#{flag}")= flag
+
+

@@ -2,8 +2,13 @@
 
   .left
     .korean
-      h3 
-        a(href="/entries/#{result._id}") #{result.korean.word}
+      - if ((typeof(result.korean.word) == '') || (result.korean.word == ''))
+        h3
+          a(href="/entries/#{result._id}") (Undefined)
+      -else
+        h3 
+          a(href="/entries/#{result._id}") #{result.korean.word}
+
       h4= result.hanja
 
   .right
