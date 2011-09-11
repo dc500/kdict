@@ -14,7 +14,8 @@ var express        = require('express'),
     sys            = require('sys'),
     path           = require('path'),
     models         = require('./models'),
-    globMessages = require('express-messages'),
+    fs             = require('fs'),
+    step           = require('step'),
     db,
     Entry,
     User,
@@ -109,7 +110,7 @@ app.dynamicHelpers({
         return req.session.user;
         return req.currentUser;
     },
-    messages: globMessages,
+    messages: require('express-messages'),
 });
 
 // TODO move
@@ -188,6 +189,9 @@ app.error(function(err, req, res, next) {
     }
 });
 
+app.get('/404/?', function(req, res) {
+    res.render('404', { status: 404 });
+});
 
 
 app.get('/logout/?', function(req, res){
@@ -554,6 +558,44 @@ app.post('/users.:format?', function(req, res) {
 
 
 
+// /files/* is accessed via req.params[0]
+// but here we name it :file
+app.get('/data/:file(*)', function(req, res, next){
+  var file = req.params.file
+    , path = __dirname + '/data/' + file;
+  // either res.download(path) and let
+  // express handle failures, or provide
+  // a callback as shown below
+  res.download(path, function(err){
+    // if an error occurs in this callback
+    // the file most likely does not exist,
+    // and it's safe to respond or next(err)
+    if (err) return next(err);
+
+    // the file has been transferred, do not respond
+    // from here, though you may use this callback
+    // for stats etc.
+    console.log('transferred %s', path);
+  }, function(err){
+    // this second optional callback is used when
+    // an error occurs during transmission
+  });
+});
+
+app.use(function(err, req, res, next){
+  if ('ENOENT' == err.code) {
+      // TODO not sure if this is the best way
+      //res.redirect('404');
+      throw new NotFound;
+      //res.send('Cant find that file, sorry!');
+  } else {
+    // Not a 404
+    next(err);
+  }
+});
+
+
+
 
 
 
@@ -568,24 +610,111 @@ app.get('/contribute/?', function(req, res){
         title: 'Contribute'
     });
 });
-app.get('/download/?', function(req, res){
-    res.render('download', {
-        title: 'Download'
+
+
+
+
+function getFileDetails(filename, callback) {
+    fs.stat(filename, function(err, stat) {
+        if (err) {
+            if (err.errno === process.ENOENT) {
+                return callback(null, 0);
+            }
+            return callback(err);
+        }
+        // Return the info we care about
+        callback(null, [ stat.size, stat.mtime, stat.ctime ]);
     });
-});
+}
+
 /*
-app.get('/developers/?', function(req, res){
-    res.render('developers', {
-        title: 'Developers'
+function getFiles(directory) {
+    var files = [];
+    var p = path.join(__dirname, directory);
+    fs.readdir(p, function(err, files) {
+        console.log(files);
+        files.forEach(function (filename) {
+            console.log(filename);
+            fs.stat(path.join(p, filename), function(info) {
+                console.log(info);
+                files.push(info);
+            });
+        });
+        return files;
     });
-});
+    console.log(files);
+}
 */
 
+
+// Want to get a list of files and their details
+var getFiles = step.fn(
+    function readDir(directory) {
+        var p = path.join(__dirname, directory);
+        fs.readdir(p, this);
+    },
+    function readFiles(err, results) {
+        if (err) throw err;
+        var files = [];
+
+        // TODO make asynchronous
+        //var group = this.group();
+        //results.forEach(function (filename) {
+
+        for (var i = 0; i < results.length; i++) {
+            var filename = results[i];
+            var p = path.join(__dirname, 'data', filename);
+            
+            // TODO make asynchronous
+            var stats = fs.statSync(p);
+
+            files.push( { name: filename, size: getTextFilesize(stats.size) } );
+        }
+        return files;
+    }
+);
+
+function getTextFilesize(bits) {
+    var mb = (bits / (1024*1024)).toFixed(2);
+    var kb = (bits / (1024)).toFixed(2);
+    var filesize = "";
+    if (Math.floor(mb) != 0) {
+        filesize = mb + " MB";
+    } else {
+        filesize = kb + " kB";
+    }
+    return filesize;
+}
+
+app.get('/download/?', function(req, res){
+
+    // file format-
+    // yyyy-mm-dd.format
+
+    // Step stuff based on http://refactormycode.com/codes/1420-node-js-calculating-total-filesize-of-3-files
+    getFiles('data', function(err, files) {
+        console.log("Files baby");
+        console.log(files);
+        res.render('download', {
+            title: 'Download',
+            files: files,
+        });
+    });
+});
+
+
+
+
+
+// Final catch-all
+app.get('*', function(req, res){
+    res.render('404', { status: 404 });
+});
 
 // Startup
 if (!module.parent) {
     app.listen(3000);
     console.log('Express server listening on port %d, environment: %s', app.address().port, app.settings.env)
-    //console.log('Using connect %s, Express %s, Jade %s', connect.version, express.version, jade.version);
+    console.log('Using connect %s, Express %s, Jade %s', connect.version, express.version, jade.version);
 }
 
