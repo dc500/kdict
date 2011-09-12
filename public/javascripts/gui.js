@@ -33,28 +33,16 @@ $(document).ready(function(){
 
     $("#search").keyup( updateDetectedLang );
         
-
     $("#search").focus();
     updateDetectedLang();
+
+
+    $("body").bind("click", function (e) {
+        $('.dropdown-toggle, .menu').parent("li").removeClass("open");
+    });
+    $(".dropdown-toggle, .menu").click(function (e) {
+        var $li = $(this).parent("li").toggleClass('open');
+        return false;
+    });
+
 });
-
-
-
-
-
-/*
-$("#search").live("blur", function(){
-    var default_value = $(this).attr("rel");
-    $(this).addClass("active");
-    if ($(this).val() == ""){
-        $(this).val(default_value);
-    }
-}).live("focus", function(){
-    var default_value = $(this).attr("rel");
-    $(this).addClass("active");  
-    if ($(this).val() == default_value){
-        $(this).val("");
-    }
-});
-
-*/

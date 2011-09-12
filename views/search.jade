@@ -1,22 +1,30 @@
+.page-header
+  h1 Search
+
 include includes/large-search
 
 p Showing page #{results.current_page} of #{results.total_pages} (#{results.range} of #{results.count}). Detected language: #{results.language}
+
+h1 Results
 
 - if (results.entries.length > 0)
   != partial('result', results.entries)
     // Want to show the 10 either side of the thing
     // TODO Partial rendering
-    ul.pagination
-      li 
-        a(href="/?q=#{results.query}") First
-      - for (var i = results.min_page; i < results.max_page; i++)
-        li 
-          - if (i == results.current_page)
-            #{i}
-          - else
-            a(href="/?q=#{results.query}&pg=#{i}")= i
-      li
-        a(href="/?q=#{results.query}&pg=#{results.total_pages}") #{results.total_pages} Last
+    div.pagination
+      ul
+        li.prev
+          a Previous
+        //a(href="/?q=#{results.query}") First
+        - for (var i = results.min_page; i < results.max_page; i++)
+          li 
+            - if (i == results.current_page)
+              #{i}
+            - else
+              a(href="/?q=#{results.query}&pg=#{i}")= i
+        li.next
+          a Next
+          //a(href="/?q=#{results.query}&pg=#{results.total_pages}") #{results.total_pages} Last
 
 - else
   p No results found

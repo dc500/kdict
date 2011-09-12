@@ -9,13 +9,14 @@ var express        = require('express'),
     mongoose       = require('mongoose'),
     mongoStore     = require('connect-mongodb'),
     mailer         = require('mailer'),
-    stylus         = require('stylus'),
+    //stylus         = require('stylus'),
     connectTimeout = require('connect-timeout'),
     sys            = require('sys'),
     path           = require('path'),
     models         = require('./models'),
     fs             = require('fs'),
     step           = require('step'),
+    less           = require('less'),
     db,
     Entry,
     User,
@@ -82,7 +83,8 @@ app.configure(function(){
     app.use(express.session({ store: mongoStore(app.set('db-uri')), secret: 'kingofnopants' }));
     app.use(express.logger({ format: '\x1b[1m:method\x1b[0m \x1b[33m:url\x1b[0m :response-time ms' }))
     app.use(express.methodOverride());
-    app.use(stylus.middleware({ src: __dirname + '/public' }));
+    app.use(express.compiler({ src: __dirname + '/public/stylesheets', enable:['less'] }))
+    //app.use(stylus.middleware({ src: __dirname + '/public' }));
     app.use(express.static(__dirname + '/public'));
 
 
@@ -303,7 +305,7 @@ app.get('/entries/recent', function(req, res) {
 app.get('/entries/new/?', requireLogin, function(req, res) {
     console.log("Displaying new form");
     res.render('entries/new', {
-        locals: { entry: new Entry() }
+        locals: { title: 'New Entry', entry: new Entry() }
     });
 });
 

@@ -1,21 +1,35 @@
-h2.fontface= title
+.page-header
+  h1= title
 
-p
-  a.button(href='/signup') Create an account &rarr;
+.row
+  .span8
+    form.users#login(method='post', action='/login')
+      fieldset
+        legend Login
+        div.clearfix
+          label(for='user[email]') Email
+          div.input
+            input(name='user[email]')
+    
+        div.clearfix
+          label(for='user[password]') Password
+          div.input
+            input(name='user[password]', type='password')
+    
+        div.clearfix
+          label Remember me:
+          div.input
+            ul.inputs-list
+              li
+                label
+                  input(type='checkbox', name='remember_me') 
+                  span Save login details
+      
+        div.actions
+          input(type='submit', value='Log In', class="btn primary")
+          button(type='reset', class="btn") Cancel
 
-form.users#login(method='post', action='/login')
-  div
-    label Email:
-    input(name='user[email]')
-
-  div
-    label Password:
-    input(name='user[password]', type='password')
-
-  div
-    label(for='remember_me') Remember me:
-    input#remember_me(type='checkbox', name='remember_me')
-  
-  div
-    input(type='submit', value='Log In')
-
+  .span8
+    h2 Create an Account
+    p An account is required to edit and contribute to the project.
+      a.btn(href='/signup') Create an account &rarr;

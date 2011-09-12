@@ -1,35 +1,46 @@
-h2.fontface= title
+.page-header
+  h1= title
+    small Raw dictionary data
 
-p The entire contents of the KDict database are freely available to download. Please use the data in your own projects!
+.row
+  .span4
+    h2 Overview
 
-h2 Nightly Dump
+  .span12
+    p The entire KDict database is freely available for download. Please use the data in your own projects!
+    p Nightly dumps are made of the database.
+    p KDict uses
+      a(href='http://www.mongodb.org/') MongoDB
+    | for its database storage, and so the data is hierarchical in nature. 
 
-p Nightly dumps are made of the database.
+    p Below is a sample of a few documents:
 
-h3 Data Format
 
-p KDict uses
-  a(href='http://www.mongodb.org/') MongoDB
-| for its database storage, and so the data is hierarchical in nature. 
 
-p Below is a sample of a few documents:
+.row
+  .span4
+    h2 Example
 
-pre
-| <script src="https://gist.github.com/1170054.js?file=gistfile1.json"></script>
+  .span12
+    <script src="https://gist.github.com/1170054.js?file=gistfile1.json"></script>
 
-h3 Data
+.row
+  .span4
+    h2 Data
 
-table
-  thead
-    tr
-      td Date
-      td Filename
-      td Size
-    tbody
-      - each file in files
+
+  .span12
+    table
+      thead
         tr
-          td= file.date
-          td
-            a(href="/data/#{file.name}") #{file.name}
-          td= file.size
-
+          td Date
+          td Filename
+          td Size
+        tbody
+          - each file in files
+            tr
+              td= file.date
+              td
+                a(href="/data/#{file.name}") #{file.name}
+              td= file.size
+    

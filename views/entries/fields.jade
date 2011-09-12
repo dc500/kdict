@@ -1,14 +1,25 @@
-div
-  label Korean:
-  input(name='entry[korean]', value=entry.korean.word || '')
+// Used for editing and creation
+div.clearfix
+  label(for='entry[korean]') Korean
+  div.input
+    input(name='entry[korean]', value=entry.korean.word || '')
 
-div
-  label Hanja:
-  input(name='entry[hanja]', value=entry.hanja || '')
+div.clearfix
+  label(for='entry[hanja]') Hanja
+  div.input
+    input(name='entry[hanja]', value=entry.hanja || '')
 
-div
-  label English:
-  input(name='entry[english]', value=entry.definitions.english[0] || '')
+div.clearfix
+  label(for='entry[english]') English
+  div.input
+    input(name='entry[english]', value=entry.definitions.english[0] || '')
+
+div.clearfi
+  label(for='entry[example]') Example
+  div.input
+    textarea(class='disabled', value='Disabled for now')
+    span.help-block Please read our guidelines regarding copyright infringement
+        
 
 p Internal ID: #{entry._id}
 p POS: #{entry.pos}
@@ -35,7 +46,4 @@ div
     li Submitter: #{ entry.old.submitter }
     li WordID: #{ entry.old.wordid }
     li Table: #{ entry.old.table }
-
-div
-  input(type='submit', value='Save')
 

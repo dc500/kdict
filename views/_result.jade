@@ -1,33 +1,31 @@
-.result
+.row
+  .span5.column
+    - if ((typeof(result.korean.word) == '') || (result.korean.word == ''))
+      h2
+        a(href="/entries/#{result._id}") (Undefined)
+    -else
+      h2 
+        a(href="/entries/#{result._id}") #{result.korean.word}
 
-  .left
-    .korean
-      - if ((typeof(result.korean.word) == '') || (result.korean.word == ''))
-        h3
-          a(href="/entries/#{result._id}") (Undefined)
-      -else
-        h3 
-          a(href="/entries/#{result._id}") #{result.korean.word}
+    h4= result.hanja
 
-      h4= result.hanja
-
-  .right
-    .definitions
-      //- if (results.definitions.length == 0)
-      - if (typeof(results.definitions) != 'undefined')
-        p No definition,
-          a(href="/entries/#{result._id}/edit") add one!
-      - else
-        - each defs, lang in result.definitions
-         ul
-           - each definition, i in defs
-             li= definition
     .edit
       - if (typeof currentUser !== 'undefined')
         p
           a(href="/entries/#{result._id}/edit") Edit
       - else
-        p (Login to edit)
+        p
+          small (Login to edit)
 
-.result-break
 
+  .span11.column
+    h2 Definitions
+    //- if (results.definitions.length == 0)
+    - if (typeof(results.definitions) != 'undefined')
+      p No definition,
+        a(href="/entries/#{result._id}/edit") add one!
+    - else
+      - each defs, lang in result.definitions
+       ul
+         - each definition, i in defs
+           li= definition

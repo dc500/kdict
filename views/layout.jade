@@ -5,8 +5,11 @@ html
       title KDict - #{title}
     -else
       title KDict
-    link(rel='stylesheet', href='/stylesheets/style.css')
-    link(rel='stylesheet', href='/stylesheets/fonts.css')
+    // Temporary
+    link(rel='stylesheet', href='/stylesheets/bootstrap-1.2.0.min.css')
+    link(rel='stylesheet', href='/stylesheets/kdict.css')
+    //link(rel='stylesheet', href='/stylesheets/style.css')
+    //link(rel='stylesheet', href='/stylesheets/fonts.css')
     link(rel='shortcut icon', href='/favicon.ico')
     // TODO: iOS shortcut icon
     link(rel='apple-touch-icon', href='images/ios.png')
@@ -14,37 +17,56 @@ html
     script(src='/javascripts/jquery-1.6.2.min.js')
     script(src='/javascripts/korean.js')
     script(src='/javascripts/gui.js')
-  body
-    #center
-      h1.fontface.title 
-        a(href='/') KDict
-      #menu
-        ul.right
-          - if (typeof currentUser !== 'undefined')
-            li.username= currentUser.username
-            li
-              a(href='/logout', class='logout') Log Out
-          - else
-            li
-              a(href='/signup', class='signup') Sign up
-            li
-              a(href='/login', class='login') Login
+    //script(src='/javascripts/bootstrap.js')
 
-        ul
-          li
-            a(href='/') Search
-          li
-            a(href='/contribute') Contribute
-          li
-            a(href='/download') Download
-          li
-            a(href="/entries/new") + Add Entry
+  body
+    .topbar
+      .fill
+        .container
+          h3
+            a(href='/') KDict
+          ul.nav
+            li.active
+              a(href='/') Search
+            li.dropdown
+              a(href='#', class='dropdown-toggle') Contribute
+              ul.dropdown-menu
+                li
+                  a(href='/contribute') How?
+                li
+                  a(href="/entries/new") Add entry
+                li
+                  a(href='/contribute/flagged') Flagged entries
+            li
+              a(href='/download') Download
+            li
+              a(href='/about') About
+
+          ul.nav.secondary-nav
+            form( method="get", action="/", class="form-stacked")
+              input(type="text", name="q", placeholder="Search") //id="search", class="search")
+            - if (typeof currentUser !== 'undefined')
+              li.dropdown
+                a(href='#', class='dropdown-toggle')= currentUser.username
+                ul.menu-dropdown
+                  li
+                    a(href='/users/profile') Profie
+                  li
+                    a(href='/users/settings') Settings
+                  li.divider
+                  li
+                    a(href='/logout') Log Out
+            - else
+              li
+                a(href='/login') Login
+
+
+    .container
 
       != messages()
  
       !=body
 
-      #footer
-        ul
-          li
-            a(href='/about/') About
+      footer
+      p KDict 2010 
+        a(href='http://github.com/bhumphreys/kdict') Source

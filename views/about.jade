@@ -1,32 +1,67 @@
-h1.fontface= title
+.page-header
+  h1= title
 
-h2 Roadmap
+.row
+  .span4
+    h2 Roadmap
+    p What next?
 
-ul.checklist
-  li Adding new dictionary entries
-  li Editing existing entries
-  li Fuzzy search
-  li Creating browser dictionary extension
-  li Creating developer API
-
-
-
-h2 Thanks
-
-p KDict would not be possible without the help of:
-
-h3 Joseph Speigle
-
-p Provided the first set of data from 
-  a(href="http://ezcorean.com/") ezcorean
-  , his own personal database of translation data, which he hand-crafted over many years. Without this data KDict could not have started.
+  .span6
+    ul.checklist
+      li Adding new dictionary entries
+      li Editing existing entries
+      li Fuzzy search
+      li Creating developer API
+      li Creating dictionary extention for major browsers
 
 
+.row
+  .span4
+    h2 Developers
+    p Who made this?
 
-h2 Technology
+  .span6
+    h3 Ben Humphreys
+      small Code
 
-p KDict uses the following technology
+    p Hacked together this site.
 
-ul
-  li Node.js - Express
-  li MongoDB
+  .span6
+    h3 Joseph Speigle
+      small Data
+
+    p Joseph owns 
+      a(href="http://ezcorean.com/") ezcorean.com
+      | , which contains his own personal database of translation data, hand-crafted over many years. This data was the starting point on which KDict was built.
+   
+
+  
+
+.row
+  .span4
+    h2 Technology
+    p 
+
+  .span6
+    a(href='http://nodejs.org/')
+      img(src='/images/nodejs.png')
+    p KDict runs on Node.js.
+
+  .span6
+    a(href='http://www.mongodb.org/')
+      img(src='/images/mongodb.png')
+    p Dictionary data is stored using the document-oriented database MongoDB.
+
+.row
+  .span6.offset4
+    h3
+      a(href='http://twitter.github.com/bootstrap/') Bootstrap
+    p Layout and theming is done using Bootstrap.
+
+.row
+  .span4
+    h2 Source
+
+  .span6
+    p The source code is available on 
+      a(href='http://github.com/bhumphreys/kdict') GitHub

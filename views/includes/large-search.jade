@@ -1,9 +1,14 @@
-#searchbox
-  form( method="get", action="/" )
-    p.suggest Search in Korean or English
-    input(type="text", name="q", id="search", class="search", value=q || '')
-    input(type="submit", class="search-button", value='O')
+.row
+  .span16
+    ul.tabs
+      li.active
+        a(href='#') Basic
 
-  div.light
-    p#detect Language: Unknown
-
+    #searchbox
+      form( method="get", action="/" )
+        input(type="text", name="q", id="search", class="search", value=q || '')
+        input(type="submit", class="search-button", value='O')
+    
+      div.light
+        p#detect Language: Unknown
+    

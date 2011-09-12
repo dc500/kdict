@@ -2,6 +2,7 @@
 
 // Work out whether the string has English, Korean or Kanji
 exports.detect_characters = function(text) {
+    if (!text) return null;
 
     // Taken from http://www.fileformat.info/info/unicode/block/index.htm
     var ranges = [

@@ -1,8 +1,20 @@
-.page
-  h2 New Entry
-  p
-    a.button(href='/') &larr; Return to search
+.page-header
+  h1= title
 
-  form(method='post', action='/entries')
-    !=partial('fields', { locals: { entry: entry } })
+.row
+  .span4
+    h2 Entry contents
+
+  // TODO as they're typing, try to find existing entries that look similar
+  .span12
+
+    form(method='post', action='/entries')
+      fieldset
+        legend Create Entry
+
+        !=partial('fields', { locals: { entry: entry } })
+
+        div.actions
+          input(type='submit', value='Create', class="btn primary")
+          button(type='reset', class="btn") Cancel
 

@@ -1,0 +1,31 @@
+body {
+    /*padding-top: 40px;*/
+}
+
+.topbar {
+    position: relative;
+    margin-bottom: 20px;
+}
+
+.topbar h3 a:hover {
+  color: #e55900;
+}
+
+a {
+  color: #e55900;
+}
+
+a:hover {
+  color: #ff8915;
+}
+
+h1 small, h2 small, h3 small {
+    margin-left: 10px;
+}
+
+/*
+#searchbox input {
+    font-size: 60px;
+}
+*/
+
