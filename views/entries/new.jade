@@ -12,7 +12,7 @@
       fieldset
         legend Create Entry
 
-        !=partial('fields', { locals: { entry: entry } })
+        !=partial('fields', { locals: { entry: entry, create: true } })
 
         div.actions
           input(type='submit', value='Create', class="btn primary")

@@ -15,18 +15,20 @@ crypto = require("crypto")
 # TODO: Move all this validation to something callable externally
 #       So we can have jQuery client-side validation for instant feedback
 
+
+korean = require("./public/javascripts/korean.js")
+
 valHangul = (value) ->
-  true
+  return korean.detect_characters(value) == 'hangul'
 
 valAlphanumeric = (value) ->
-  true
+  return korean.detect_characters(value) == 'english'
 
 valHanja = (value) ->
-  true
+  return korean.detect_characters(value) == 'hanja'
 
 valPresenceOf = (value) ->
   value and value.length
-
 
 valPOS = (value) ->
   true
@@ -58,7 +60,6 @@ defineModels = (mongoose, fn) ->
     korean:
       hangul:
         type: String
-        index: true
         required: true
         validate: [ valHangul, "Korean must not contain English characters" ]
 
@@ -112,6 +113,13 @@ defineModels = (mongoose, fn) ->
   Entry.virtual("id").get ->
     @_id.toHexString()
 
+  Entry.virtual("definitions.english_all").get ->
+    @definitions.english.join('; ')
+  Entry.virtual("definitions.english_all").set (list) ->
+    @definitions.english.list.split('; ')
+
+      
+
   Entry.pre "save", (next) ->
     # TODO Automatically generate phonetic representation
     # TODO Automatically create Update
@@ -146,19 +154,6 @@ defineModels = (mongoose, fn) ->
     type:
       type: String
       enum: [ "new", "edit", "delete" ]
-
-    status:
-      type:
-        type: String
-        enum: [ "approved", "rejected", "pending" ]
-        index: true
-
-      user:
-        type: ObjectId
-        ref: "User"
-
-      updated_at:
-        type: Date
 
     revision_num:
       type: Number
@@ -210,12 +205,11 @@ defineModels = (mongoose, fn) ->
   User.virtual("id").get ->
     @_id.toHexString()
 
-  User.virtual("password").set((password) ->
-
+  User.virtual("password").set (password) ->
     @_password = password
     @salt = @makeSalt()
     @hashed_password = @encryptPassword(password)
-  ).get ->
+  User.virtual("password").get ->
     @_password
 
   User.virtual("level").get ->

@@ -1,23 +1,26 @@
-.page
-  h2 Sign Up
+.page-header
+  h1=title
 
-  form.users(method='post', action='/users')
-    div
-      label Email:
-      input(name='user[email]', value=user.email || '')
+.row
+  .span16
+    form(method='post', action='/signup')
+      fieldset
+        div.clearfix
+          label(for='user[email]') Email
+          div.input
+            input(name='user[email]')
 
-    div
-      label Username:
-      input(name='user[username]', value=user.username || '')
-
-    div
-      label Password:
-      input(name='user[password]', value=user.password || '', type='password')
-
-    p Todo: Add more fields
+        div.clearfix
+          label(for='user[username]') Username
+          div.input
+            input(name='user[username]')
     
-    div
-      input(type='submit', value='Sign up')
-      span \ or 
-        a(href='/sessions/new') Log In
+        div.clearfix
+          label(for='user[password]') Password
+          div.input
+            input(name='user[password]', type='password')
+    
+        div.actions
+          input(type='submit', value='Sign up', class="btn primary")
+          button(type='reset', class="btn") Clear
 

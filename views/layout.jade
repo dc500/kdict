@@ -39,10 +39,15 @@ html
                   a(href='/updates') Updates
                 li
                   a(href='/contribute/flagged') Flagged entries
+            li.dropdown
+              a(href='#', class='dropdown-toggle') Developers
+              ul.dropdown-menu
                 li
-                  a(href="/contribute/developers") Developers
-            li
-              a(href='/download') Download
+                  a(href="/developers/contribute") Contribute
+                li
+                  a(href='/developers/download') Download
+                li
+                  a(href="#") API (Coming soon)
             li
               a(href='/about') About
 
@@ -62,7 +67,7 @@ html
                     a(href='/logout') Log Out
             - else
               li
-                a(href='/login') Login
+                a(href='/login') Log in
 
 
     .container

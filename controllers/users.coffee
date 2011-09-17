@@ -1,3 +1,6 @@
+mailer   = require("mailer")
+jade     = require("jade") # for email rendering
+path     = require("path")
 mongoose = require("mongoose")
 User     = mongoose.model("User")
 Update   = mongoose.model("Update")
@@ -14,6 +17,17 @@ exports.logout = (req, res) ->
 exports.showLogin = (req, res) ->
   res.redirect "/"  if req.session.user
   res.render "sessions/new", locals: title: "Login"
+
+# Can be either username or email
+authenticate = (namemail, pass, next) ->
+  query = username: namemail
+  if namemail.match /@/
+    query = email: namemail
+    console.log 'Logging in via email'
+  User.findOne query, (err, user) ->
+    return next(new Error("cannot find user"))  if err or not user
+    return next(null, user)  if user.authenticate
+    next new Error("invalid password")
 
 exports.login = (req, res) ->
   authenticate req.body.user.namemail, req.body.user.password, (err, user) ->
@@ -34,7 +48,9 @@ exports.create = (req, res) ->
   userSaveFailed = ->
     console.log "Save failed"
     req.flash "error", "Account creation failed"
-    res.render "users/new", locals: user: user
+    res.render "users/new", locals:
+      title: 'Sign up'
+      user: user
   user = new User(req.body.user)
   user.save (err) ->
     if err
@@ -151,4 +167,35 @@ exports.resetPassword = (req, res, next) ->
     #
     res.render 'sessions/reset_password', locals:
       title: 'Reset Password'
+
+# Email stuff
+emails =
+  send: (template, mailOptions, templateOptions) ->
+    mailOptions.to = mailOptions.to
+    jade.renderFile path.join(__dirname, "../views", "mailer", template), templateOptions, (err, text) ->
+      mailOptions.body = text
+      keys = Object.keys(app.set("mailOptions"))
+      i = 0
+      len = keys.length
+
+      while i < len
+        k = keys[i]
+        mailOptions[k] = app.set("mailOptions")[k]  unless mailOptions.hasOwnProperty(k)
+        i++
+      console.log "[SENDING MAIL]", sys.inspect(mailOptions)
+      #if app.settings.env == "production"  # SCREW IT
+      mailer.send mailOptions, (err, result) ->
+        console.log err  if err
+
+  sendConfirmation: (user) ->
+    @send "confirm.jade",
+      to: user.email
+      subject: "KDict - Please Confirm"
+    , locals: user: user
+
+  sendReset: (email, link) ->
+    @send "reset.jade",
+      to: email
+      subject: "KDict - Confirm Password Reset"
+    , locals: email: email, link: link
 

@@ -9,11 +9,11 @@ exports.detect_characters = function(text) {
         // Start of range, end of range
         [ 0x0000, 0x024F, 'english'],
 
-        [ 0x1100, 0x11FF, 'korean' ], // Hangul Jamo	
-        [ 0x3130, 0x318F, 'korean' ], // Hangul Compatibility Jamo	
-        [ 0xA960, 0xA97F, 'korean' ], // Hangul Jamo Extended-A	
-        [ 0xAC00, 0xD7AF, 'korean' ], // Hangul Syllables	
-        [ 0xD7B0, 0xD7FF, 'korean' ], // Hangul Jamo Extended-B	
+        [ 0x1100, 0x11FF, 'hangul' ], // Hangul Jamo	
+        [ 0x3130, 0x318F, 'hangul' ], // Hangul Compatibility Jamo	
+        [ 0xA960, 0xA97F, 'hangul' ], // Hangul Jamo Extended-A	
+        [ 0xAC00, 0xD7AF, 'hangul' ], // Hangul Syllables	
+        [ 0xD7B0, 0xD7FF, 'hangul' ], // Hangul Jamo Extended-B	
         
         [ 0x4E00,  0x9FFF, 'hanja' ], // CJK Unified Ideographs
         [ 0xF900, 0x2FA1F, 'hanja' ] // Massive mess of CJK and other stuff

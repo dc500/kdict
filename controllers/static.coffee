@@ -1,4 +1,6 @@
 step = require("step")
+path = require("path")
+fs   = require("fs")
 
 exports.notFound = (req, res) ->
   res.render "404", status: 404
@@ -29,28 +31,42 @@ exports.developers = (req, res) ->
 
 
 getFiles = step.fn(readDir = (directory) ->
+  console.log "Reading directory"
   p = path.join(__dirname, directory)
+  console.log p
   fs.readdir p, this
 , readFiles = (err, results) ->
-  throw err  if err
+  console.log "Reading files"
+  throw err if err
+  console.log "Still good"
   files = []
-  i = 0
-
-  while i < results.length
-    filename = results[i]
-    continue  unless filename.match(/.tar$/)
-    p = path.join(__dirname, "data", filename)
+  console.log results
+  for filename in results
+    console.log filename
+    continue unless filename.match(/.tar$/)
+    p = path.join(__dirname, "../data", filename)
+    console.log p
     stats = fs.statSync(p)
     files.push
       name: filename
       size: getTextFilesize(stats.size)
       date: stats.mtime
-    i++
-  files
+  return files
 )
 
+getTextFilesize = (bits) ->
+  mb = (bits / (1024 * 1024)).toFixed(2)
+  kb = (bits / (1024)).toFixed(2)
+  filesize = ""
+  unless Math.floor(mb) == 0
+    filesize = mb + " MB"
+  else
+    filesize = kb + " kB"
+  filesize
+
 exports.download = (req, res) ->
-  getFiles "data", (err, files) ->
+  getFiles "../data", (err, files) ->
+    console.log err
     console.log "Files baby"
     console.log files
     res.render "download",

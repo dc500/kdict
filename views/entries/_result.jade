@@ -1,0 +1,41 @@
+.row
+  .span4
+    - if ((typeof(result.korean.hangul) == 'undefined') || (result.korean.hangul == ''))
+      h2
+        a(href="/entries/#{result._id}") (Undefined)
+    -else
+      h2 
+        a(href="/#{result.korean.hangul}") #{result.korean.hangul}
+  
+    h4= result.hanja
+  
+    .edit
+      - if (typeof currentUser !== 'undefined')
+        p
+          a(href="/entries/#{result.id}/edit") Edit
+      - else
+        p
+          small (Login to edit)
+  
+  
+  .span6
+    h6 Definitions
+    //- if (results.definitions.length == 0)
+    - if (typeof(result.definitions) == 'undefined')
+      p No definition, 
+        a(href="/entries/#{result.id}/edit") add one!
+    - else
+        ul
+          - each definition, i in result.definitions.english
+            li= definition
+
+  .span6
+    h6 Examples
+
+- if (typeof(result.flags) != 'undefined')
+  .row
+    .span12.offset4
+      ul.flags
+        - each flag in result.flags
+          li= flag
+

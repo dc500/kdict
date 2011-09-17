@@ -11,11 +11,11 @@ div(class="row #{update.type}")
 
     h6 \##{update.revision_num}
 
-    h6 Status: 
-      span(class="#{update.status.type}")= update.status.type
+    //h6 Status: 
+    //  span(class="#{update.status.type}")= update.status.type
+    //h5 #{update.status.date}
     h6
       mixin username_with_score(update.user)
-    h5 #{update.status.date}
 
     a(href='#', class='show-change-raw') Show Raw
     pre.change-raw !{ JSON.stringify(update) }

@@ -1,3 +1,7 @@
+.hero-unit
+  h1 Data
+  p Delicious, delicious data
+
 .page-header
   h1= title
     small Raw dictionary data
@@ -10,24 +14,12 @@
     p The entire KDict database is freely available for download. Please use the data in your own projects!
     p Nightly dumps are made of the database.
     p KDict uses
-      a(href='http://www.mongodb.org/') MongoDB
-    | for its database storage, and so the data is hierarchical in nature. 
-
-    p Below is a sample of a few documents:
-
-
-
-.row
-  .span4
-    h2 Example
-
-  .span12
-    <script src="https://gist.github.com/1170054.js?file=gistfile1.json"></script>
+      a(href='http://www.mongodb.org/') MongoDB 
+      for its database storage, and so the data is hierarchical in nature. 
 
 .row
   .span4
     h2 Data
-
 
   .span12
     table
@@ -44,3 +36,22 @@
                 a(href="/data/#{file.name}") #{file.name}
               td= file.size
     
+
+
+.row
+  .span4
+    h2 Example
+
+  .span12
+    h4 JSON
+    <script src="https://gist.github.com/1170054.js?file=gistfile1.json"></script>
+.row
+  .offset4.span12
+    h4 CSV
+    pre wordid,korean,english,hanja,pos,old_table,flags
+      ,{ "word" : "초저녁", "length" : 3 },,"初","noun",,[]
+      ,{ "word" : "꼼꼼하다", "length" : 4 },,"","adjective",,[]
+      ,{ "word" : "초여름", "length" : 3 },,"初","noun",,[]
+      ,{ "word" : "집중하다", "length" : 4 },,"集中","verb",,[]
+      
+

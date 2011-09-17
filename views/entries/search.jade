@@ -1,0 +1,36 @@
+.page-header
+  h1 Search
+
+include ../includes/large-search
+
+p Showing page #{paginator.current_page} of #{paginator.total_pages} (#{paginator.range_str} of #{paginator.count}).
+
+.row
+  .span4
+    h2 Results
+
+- if (entries.length == 0)
+  p No results found
+- else
+  != partial('result', entries)
+  // Want to show the 10 either side of the thing
+  // TODO Partial rendering
+
+// TODO paginator mixin
+.row
+  .span12.offset4
+    .pagination
+      ul
+        li.prev
+          a Previous
+        //a(href="/?q=#{results.query}") First
+        - for (var i = paginator.min_page; i < paginator.max_page; i++)
+          li 
+            - if (i == paginator.current_page)
+              #{i}
+            - else
+              a(href="/?q=&pg=#{i}")= i
+        li.next
+          a Next
+          //a(href="/?q=#{results.query}&pg=#{results.total_pages}") #{results.total_pages} Last
+

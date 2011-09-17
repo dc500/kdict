@@ -4,8 +4,6 @@ data/
 
 public/images/purple.gif
 
-search.old
+*.old
 
-app.old
-
-models.old
+public/images/icons/
