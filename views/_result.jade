@@ -1,18 +1,18 @@
 .row
   .span5.column
-    - if ((typeof(result.korean.word) == '') || (result.korean.word == ''))
+    - if ((typeof(result.korean.hangul) == '') || (result.korean.hangul == ''))
       h2
-        a(href="/entries/#{result._id}") (Undefined)
+        a(href="/entries/#{result.id}") (Undefined)
     -else
       h2 
-        a(href="/entries/#{result._id}") #{result.korean.word}
+        a(href="/entries/#{result.id}") #{result.korean.hangul}
 
     h4= result.hanja
 
     .edit
       - if (typeof currentUser !== 'undefined')
         p
-          a(href="/entries/#{result._id}/edit") Edit
+          a(href="/entries/#{result.id}/edit") Edit
       - else
         p
           small (Login to edit)
@@ -23,7 +23,7 @@
     //- if (results.definitions.length == 0)
     - if (typeof(results.definitions) != 'undefined')
       p No definition,
-        a(href="/entries/#{result._id}/edit") add one!
+        a(href="/entries/#{result.id}/edit") add one!
     - else
       - each defs, lang in result.definitions
        ul

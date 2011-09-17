@@ -1,0 +1,21 @@
+.page-header
+  h1= title
+
+.row
+  .span8
+    form.users#login(method='post', action='/login/reset')
+      fieldset
+        legend Reset password
+
+        div.clearfix
+          label(for='email') Email
+          div.input
+            input(name='email')
+      
+        div.actions
+          input(type='submit', value='Send E-mail', class="btn primary")
+          a.btn(href='/login') Cancel
+          //button(type='reset', class="btn") Cancel
+          //a.btn(href='/login/reset') Forgotten password?
+
+

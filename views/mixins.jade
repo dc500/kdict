@@ -1,0 +1,4 @@
+mixin username_with_score(user)
+  span.score (#{user.score}) 
+  a(href="/users/#{user.username}", class="#{user.level}") #{user.display_name}
+

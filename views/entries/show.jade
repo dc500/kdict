@@ -49,6 +49,14 @@
       small
         a(href='#') source
 
+.row
+  .span3
+    h3 Revisions
+    p Full history of changes made
+
+  .span13
+    p TODO
+
 
 .row
   .span3
@@ -61,13 +69,13 @@
       dd= entry._id
     dl
       dt Submitter
-      dd= entry.old.submitter
+      dd= entry.legacy.submitter
     dl
       dt WordID
-      dd= entry.old.wordid
+      dd= entry.legacy.wordid
     dl
       dt Table
-      dd= entry.old.table
+      dd= entry.legacy.table
 
     h3 Flags
     - if (entry.flags.length != 0)

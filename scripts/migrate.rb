@@ -4,6 +4,10 @@ require 'mongo'
 require 'hpricot' # for parsing weird stuff in Hanja column
 require 'pp'
 
+##### WARNING
+#             This skips All the validation in the DB as it inserts directly
+#             and ignores all the magical Mongoose validation.
+
 module KDict
     class Migration
 
@@ -18,14 +22,28 @@ module KDict
             # inserting into
             @entries = db.collection("entries")
             @entries.drop()
-            
+
+            @updates = db.collection("updates")
+            @updates.drop()
+
+            @users = db.collection("users")
+            @users.drop()
+            @user_id = @users.insert( {
+              display_name: 'Migration script',
+              username: 'migrate.rb',
+              email: 'migrate',
+            })
+
+
+            #@updates.create_index
+
             # These IDs are just evil, they cause problems, we drop them
             @evil_ids = [
                 233358
             ]
         end
 
-        
+
         def import_all
             import(@m_korean)
             import(@p_korean)
@@ -89,7 +107,7 @@ module KDict
                 end
 
                 if (row['def'] =~ /^see /i)
-                    flags.push("See... definition")
+                    flags.push("Definition includes See...")
                     # Ideally we want to be able to link these
                 end
 
@@ -124,17 +142,19 @@ module KDict
                 output['definitions']['english'].push(eng)
 
                 output['korean'] = Hash.new
-                output['korean']['word'], flag  = KDict::Migration.clean_korean(row['word'])
+                output['korean']['hangul'], flag  = KDict::Migration.clean_korean(row['word'])
                 if flag
                     flags.push(flag)
                 end
                 
                 # Saving the output for search usage
-                output['korean']['length'] = output['korean']['word'].length
+                # This is now done by a mapreduce op
+                # output['korean']['length'] = output['korean']['word'].length
 
 
                 if (collection.name != "p_korean")
-                    output['hanja'], flag  = KDict::Migration.clean_hanja(row['hanja'])
+                    hanja, flag  = KDict::Migration.clean_hanja(row['hanja'])
+                    output['hanja'] = [ hanja ]
                     if flag
                         flags.push(flag)
                     end
@@ -145,6 +165,7 @@ module KDict
                     flags.push(flag)
                 end
 
+                # Get rid of empty things
                 row.each do |key, val|
                     if (row['key'] == '\N')
                         row['key'] = nil
@@ -156,20 +177,35 @@ module KDict
                 #end
 
 
-                output['submitter'] = 'Ruby migration tool'
-                output['flags'] = flags
+                #output['submitter'] = 'Ruby migration tool'
+                # TODO Do we want to change the way flags are being handled?
+                #      Instead they could be set by running the Mongoose validation
+                #      on each record, via Javascript
+                #output['flags'] = flags
 
-                output['old'] = Hash.new
-                output['old']['wordid']    = row['wordid']
-                output['old']['submitter'] = row['submitter']
-                output['old']['table']     = collection.name
+                output['legacy'] = Hash.new
+                output['legacy']['wordid']    = row['wordid']
+                output['legacy']['submitter'] = row['submitter']
+                output['legacy']['table']     = collection.name
 
-                output['created_at'] = Time.now;
-                output['updated_at'] = Time.now;
-
+                #output['created_at'] = Time.now;
+                #output['updated_at'] = Time.now;
 
                 # Write the data
-                @entries.insert( output )
+                id = @entries.insert( output )
+
+                # TODO: "Update" entries
+                update = Hash.new
+                update['entry']  = id
+                update['after']  = output
+                update['type']   = 'new'
+                update['status'] = Hash.new
+                update['user'] = @user_id
+                update['status']['type']      = 'pending'
+                update['status']['update_at'] = Time.now
+                update['status']['user']      = @user_id
+                update['revision_num'] = 1
+                @updates.insert( update )
             end
         end
 
@@ -210,10 +246,10 @@ module KDict
                 #puts "Def is just a number"
             end
 
-            # First get rid of <b> and <i> tags. They're useful for meaning/context
+            # Replace <b> and <i> tags with ", useful for context/emphasis later
             clean.gsub!(/<\/?[bi]>/, '"')
             
-            # Get rid of all HTML
+            # Get rid of all remaining HTML
             clean = kill_html(clean)
 
             # non-english content in english def

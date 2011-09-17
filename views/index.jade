@@ -3,22 +3,22 @@ include includes/large-search
 
 
 .row
-  .span-one-third.column
+  .span-one-third
     h2 Welcome to KDict
     p Welcome to KDict, an open-source community-maintained Korean dictionary.
   .span-one-third.column
     h2 Community-driven
     p stuff
     p
-      a.btn('/contribute') Contribute
-  .span-one-third.column
+      a.btn(href='/contribute') Contribute
+  .span-one-third
     h2 Open-source
     p The entire KDict database is available to download and use freely in any project.
     p
-      a.btn('/download') View Data
+      a.btn(href='/download') View Data
 
 .row
-  .span-one-third.column
+  .span-one-third
     h2 Top Contributors
     table
       thead
@@ -28,16 +28,18 @@ include includes/large-search
           td Edits
       tbody
         tr
-          td benhumphreys
+          td 
+            a(href="/users/benhumphreys") benhumphreys
           td 42
           td 524
         tr
-          td joe
+          td
+            a(href="/users/joe") joe
           td 154,000
           td 524
 
   .span-one-third.column
-    h2 ??
+    h2 New Entries
   
   .span-one-third.column
-    h2 ??
+    h2 Recently Edited

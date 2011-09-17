@@ -1,0 +1,42 @@
+include ../mixins
+
+div(class="row #{update.type}")
+  .span4
+    - if ((typeof(update.after.korean.hangul) == 'undefined') || (update.after.korean.hangul == ''))
+      h2 (Undefined)
+    -else
+      h2 #{update.after.korean.hangul}
+
+    h5= update.created_at
+
+    h6 \##{update.revision_num}
+
+    h6 Status: 
+      span(class="#{update.status.type}")= update.status.type
+    h6
+      mixin username_with_score(update.user)
+    h5 #{update.status.date}
+
+    a(href='#', class='show-change-raw') Show Raw
+    pre.change-raw !{ JSON.stringify(update) }
+
+
+
+  .span6.after
+    h6 After
+    - if(typeof(update.after) == 'undefined')
+      pre (None)
+    - else
+      != partial('../entries/short', { short: update.after })
+      a(href='#', class='show-change-raw') Show Raw
+      pre.change-raw !{ JSON.stringify(update.after) }
+      //pre= update.after
+
+  .span6.before
+    h6 Before
+    - if(typeof(update.before) == 'undefined')
+      pre (None)
+    - else
+      a(href='#', class='show-change-raw') Show Raw
+      pre.change-raw !{ JSON.stringify(update.before) }
+

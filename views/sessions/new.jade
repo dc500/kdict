@@ -7,9 +7,9 @@
       fieldset
         legend Login
         div.clearfix
-          label(for='user[email]') Email
+          label(for='user[namemail]') Username or Email
           div.input
-            input(name='user[email]')
+            input(name='user[namemail]')
     
         div.clearfix
           label(for='user[password]') Password
@@ -27,9 +27,15 @@
       
         div.actions
           input(type='submit', value='Log In', class="btn primary")
-          button(type='reset', class="btn") Cancel
+          button(type='reset', class="btn") Clear
+
+
 
   .span8
     h2 Create an Account
     p An account is required to edit and contribute to the project.
       a.btn(href='/signup') Create an account &rarr;
+
+.row
+  .span16
+    a.btn(href='/login/reset') Forgotten password?

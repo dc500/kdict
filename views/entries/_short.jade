@@ -1,0 +1,22 @@
+// Should only display stuff that's set
+
+- if ((typeof(update.after.korean.hangul) == 'undefined') || (update.after.korean.hangul == ''))
+  h4
+    a(href="/entries/#{update.after.id}") (Undefined)
+-else
+  h4 
+    a(href="/entries/#{update.after.id}") #{update.after.korean.hangul}
+    
+      small= update.after.hanja
+
+
+h6 Definitions
+//- if (update.afters.definitions.length == 0)
+- if (typeof(update.after.definitions) == 'undefined')
+  p (none)
+- else
+  - each defs, lang in update.after.definitions
+   ul
+     - each definition, i in defs
+       li= definition
+

@@ -26,7 +26,7 @@ html
           h3
             a(href='/') KDict
           ul.nav
-            li.active
+            li
               a(href='/') Search
             li.dropdown
               a(href='#', class='dropdown-toggle') Contribute
@@ -36,7 +36,11 @@ html
                 li
                   a(href="/entries/new") Add entry
                 li
+                  a(href='/updates') Updates
+                li
                   a(href='/contribute/flagged') Flagged entries
+                li
+                  a(href="/contribute/developers") Developers
             li
               a(href='/download') Download
             li
@@ -50,7 +54,7 @@ html
                 a(href='#', class='dropdown-toggle')= currentUser.username
                 ul.menu-dropdown
                   li
-                    a(href='/users/profile') Profie
+                    a(href='/users/profile') Profile
                   li
                     a(href='/users/settings') Settings
                   li.divider

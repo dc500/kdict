@@ -1,8 +1,16 @@
 .row
   .span16
-    ul.tabs
-      li.active
-        a(href='#') Basic
+    ul.segmented-control
+        li#auto
+            a(href='#auto') Auto
+        li#english
+            a(href='#') English
+        li#korean
+            a(href='#') Korean
+        li#hanja
+            a(href='#') Hanja
+        li#phonetic
+            a(href='#') Phonetic
 
     #searchbox
       form( method="get", action="/" )

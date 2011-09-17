@@ -37,6 +37,18 @@ $(document).ready(function(){
     updateDetectedLang();
 
 
+    $("a.show-change-raw").click(function(){
+        var pre = $(this).next("pre");
+        if (pre.is(":hidden")) {
+            pre.slideDown();
+        } else {
+            pre.slideUp();
+        }
+        return false;
+    });
+    
+
+
     $("body").bind("click", function (e) {
         $('.dropdown-toggle, .menu').parent("li").removeClass("open");
     });

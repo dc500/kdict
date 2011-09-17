@@ -1,0 +1,45 @@
+.page-header
+  h1= user.display_name
+    small= user.username
+
+h4 Score #{ user.score }
+
+.row
+  .span16
+    h2 Statistics
+  .span-one-third
+
+    // TODO Pie chart
+    h4 Updates
+    dl
+      dt Added:
+      dd= counts.added
+      dt Edited:
+      dd= counts.edited
+      dt Deleted
+      dd= counts.deleted
+
+  .span-one-third
+    h4 Post status
+    dl
+      dt Pending:
+      dd= counts.status.pending
+      dt Approved:
+      dd= counts.status.approved
+      dt Rejected:
+      dd= counts.status.rejected
+
+  .span-one-third
+    h4 Confirmations made
+    dl
+      dt Approved:
+      dd= counts.made.approved
+      dt Rejected:
+      dd= counts.made.rejected
+
+//!= partial('updates/short', updates)
+//- each update in updates
+  
+
+
+
