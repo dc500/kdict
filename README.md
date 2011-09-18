@@ -26,8 +26,12 @@ Here's how to get a local copy of KDict running for development purposes:
 
 The core of KDict is the dictionary data. The project's main goal is to provide high-quality data that can be used in any Korean-language project.
 
+Nightly dumps are available at [KDict's developer download page](http://kdict.org/developers/download)
+
 KDict uses MongoDB for its storage, and so each dictionary entry is a hierarchical document.
 The format of this is still being revised, but the current draft is shown below:
+
+#### Format
 
 ```yaml
 entry: {
