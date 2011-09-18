@@ -165,14 +165,17 @@ app.get '/developers/contribute/?', static.developers
 app.get '/developers/download/?',   static.download
 
 entries = require('./controllers/entries')
-app.get  '/:word.:format?',       entries.show
-app.get  '/entries/:id.:format?', entries.show
+#app.get  '/:word.:format?',       entries.show # Temporarily disabled
+app.get  '/entries/:id.:format?', entries.showById
 
+# PROBLEM: What if we want to find all entries for 'new'
 app.get  '/entries/new/?',            requireLogin, entries.new
 app.post '/entries/?',                requireLogin, entries.create
 app.get  '/entries/:id.:format?/edit', requireLogin, entries.edit
 app.put  '/entries/:id.:format?/edit', requireLogin, entries.update
 app.del  '/entries/:id.:format?',      requireLogin, entries.delete
+
+app.get  '/entries/batch',             requireLogin, entries.batchEdit
 
 #app.put '/entries/:id.:format?',      updates.update, requireLogin 
 #app.del  '/entries/:id.:format?',     updates.delete, requireLogin

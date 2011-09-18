@@ -3,34 +3,41 @@
 
 include ../includes/large-search
 
-p Showing page #{paginator.current_page} of #{paginator.total_pages} (#{paginator.range_str} of #{paginator.count}).
 
 .row
-  .span4
+  .span16
     h2 Results
+      small Showing page #{paginator.page} of #{paginator.total_pages} (#{paginator.range_str} of #{paginator.count} results)
 
-- if (entries.length == 0)
-  p No results found
-- else
-  != partial('result', entries)
-  // Want to show the 10 either side of the thing
-  // TODO Partial rendering
+    - if (entries.length == 0)
+      p No results found
+    - else
+      table.zebra-striped
+        tbody
+          - each entry in entries
+            tr
+              td
+                h3= entry.korean.hangul
+              td
+                small= entry.pos
+              td= entry.hanja
+              td= entry.definitions.english_all
 
-// TODO paginator mixin
-.row
-  .span12.offset4
-    .pagination
-      ul
-        li.prev
-          a Previous
-        //a(href="/?q=#{results.query}") First
-        - for (var i = paginator.min_page; i < paginator.max_page; i++)
-          li 
-            - if (i == paginator.current_page)
-              #{i}
-            - else
-              a(href="/?q=&pg=#{i}")= i
-        li.next
-          a Next
-          //a(href="/?q=#{results.query}&pg=#{results.total_pages}") #{results.total_pages} Last
-
+- if (paginator.total_pages > 1)
+  .row
+    .span12.offset4
+      .pagination
+        ul
+          li.prev
+            a Previous
+          //a(href="/?q=#{results.query}") First
+          - for (var i = paginator.min_page; i < paginator.max_page; i++)
+            li 
+              - if (i == paginator.current_page)
+                #{i}
+              - else
+                a(href="/?q=&pg=#{i}")= i
+          li.next
+            a Next
+            //a(href="/?q=#{results.query}&pg=#{results.total_pages}") #{results.total_pages} Last
+  

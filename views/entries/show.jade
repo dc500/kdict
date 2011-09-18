@@ -1,5 +1,98 @@
-.page-header
-  h1= entry.korean.hangul
-    small #{entry.pos}
+script
+  $('.editable').editableSet({
+    action: '/entries/#{entry.id}/update',
+    afterSave: function() {
+      alert( 'Saved Successfully!' );
+    }
+  });
 
-!= partial('full', { full: entry })
+
+.editable
+  .page-header
+    h1
+      span(data-name='entry[korean][hangul]')= entry.korean.hangul
+      small
+        span(data-name='entry[pos]')= entry.pos
+  
+  .row
+    .span3
+      h2 Definitions
+  
+    .span8
+      // Definitions etc
+      // TODO Stupid bug
+      //- each defs, lang in d.definitions
+  
+      h4 English
+      ul
+      - each def, i in entry.definitions.english
+        li
+          span(data-name='entry[definitions][english][]')= def
+  
+      small
+        span(data-name='entry[hanja]')= entry.hanja
+    .span5
+      p
+        - if (typeof currentUser !== 'undefined')
+          a(href='/entries/#{entry._id}/edit') Edit
+        - else
+          a(href='/login') Login to edit
+  
+     
+      //form( method="get", action="/", class="form-stacked")
+        .clearfix
+          label(for='search') Search
+          .input
+            input(type="text", name="q", id="search")
+  
+        button(type="submit", class="btn primary") Search
+  
+  
+  
+  .row
+    .span3
+      h3 Examples
+  
+    .span6
+      h6
+        a(href="http://tatoeba.org/eng/sentences/search?query=#{entry.korean.hangul}&from=kor") Search for examples on Tatoeba.org
+  
+  
+  
+  
+  .row
+    .span3
+      h3 Revisions
+      p entry history of changes made
+  
+    .span13
+      != partial('../updates/short', entry.updates)
+  
+  
+  .row
+    .span3
+      h3 Internal
+      p This information is useful for developers
+  
+    .span13
+      dl
+        dt Internal ID
+        dd= entry._id
+      dl
+        dt Submitter
+        dd= entry.legacy.submitter
+      dl
+        dt WordID
+        dd= entry.legacy.wordid
+      dl
+        dt Table
+        dd= entry.legacy.table
+  
+      h3 Flags
+      - if (entry.flags.length != 0)
+        ul
+        - each flag, i in entry.flags
+          li= flag
+      - else
+        p (none)
+

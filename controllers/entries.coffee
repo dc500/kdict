@@ -2,27 +2,26 @@ mongoose = require('mongoose')
 Entry    = mongoose.model('Entry')
 korean   = require("../public/javascripts/korean.js")
 
-# Is this needed?
+###
 exports.show = (req, res, next) ->
-  query = {}
-  if req.params.id
-    query = { '_id' : req.params.id }
-  else
-    # detect language
-    keyval = generalString(req.params.word)
-    query[keyval[0]] = keyval[1]
+  keyval = generalString(req.params.word)
+  query[keyval[0]] = keyval[1]
+  Entry.findById( req.params.id ).populate('updates').run (err, entry) ->
+    return next(new NotFound("Entry not found")) unless entry
+    console.log entry
+    res.render 'entries/show', locals:
+      entry: entry
+      title: entry.korean.hangul
+###
 
-  Entry.find(query).populate('updates').run (err, entries) ->
-    return next(new NotFound("Entry not found")) unless entries
-    console.log entries
-    console.log entries.length
-    if req.params.id
-      title = entries[0].korean.hangul
-    else
-      title = req.params.word
-    res.render "entries/showMultiple", locals:
-      entries: entries
-      title:   title
+# Is this needed?
+exports.showById = (req, res, next) ->
+  Entry.findById( req.params.id ).populate('updates').run (err, entry) ->
+    return next(new NotFound("Entry not found")) unless entry
+    console.log entry
+    res.render 'entries/show', locals:
+      entry: entry
+      title: entry.korean.hangul
 
 exports.new = (req, res) ->
   console.log "Displaying new form"
@@ -134,6 +133,10 @@ class Paginator
       @max_page = @total_pages
     else
       @max_page = @page + @range
+    max_range = (@skip + @per_page)
+    if max_range > @count
+      max_range = @count
+    @range_str = (@skip + 1) + "-" + max_range
 
   #limit: ->
   #  @per_page
@@ -161,14 +164,14 @@ exports.search = (req, res, next) ->
 
   paginator = new Paginator req.query
   order = "korean.length"
-  Entry.count(query).limit(paginator.limit).skip(paginator.skip).sort(order, 1).run (err, count) ->
+  Entry.count(query).limit(paginator.limit).skip(paginator.skip).sort(order, -1).run (err, count) ->
     if err
       console.log err
       next err
     else
       paginator.setCount count
       console.log paginator
-      Entry.find(query).limit(paginator.limit).skip(paginator.skip).sort(order, 1).run (err, entries) ->
+      Entry.find(query).limit(paginator.limit).skip(paginator.skip).sort(order, -1).run (err, entries) ->
         if err
           console.log err
           next err
@@ -203,7 +206,7 @@ exports.listFlags = (callback) ->
 generalString = (query) ->
   val = new RegExp(query, 'i')
   switch korean.detect_characters(query)
-    when 'hangul'  then key = 'korean.word'
+    when 'hangul'  then key = 'korean.hangul'
     when 'english' then key = 'definitions.english'
     when 'hanja'   then key = 'hanja'
   return [key, val]
@@ -213,3 +216,79 @@ generalString = (query) ->
 #exports.SearchProvider = SearchProvider
 
 
+exports.edit = (req, res, next) ->
+  console.log "Trying to edit something. Delicious"
+  Entry.findById req.params.id, (err, entry) ->
+    return next(new NotFound("Entry not found"))  unless entry
+    console.log "Dumping contents of D baby"
+    console.log entry
+    res.render "entries/edit", locals: entry: entry
+
+exports.update = (req, res, next) ->
+  console.log "Trying to update document"
+  console.log req.params
+  Entry.findById req.params.id, (err, entry) ->
+    if err
+      console.log "Save error"
+      console.log err
+    return next(new NotFound("Entry not found"))  unless entry
+    console.log "------------------------"
+    console.log "Trying to update document"
+    console.log entry
+    console.log "------------------------"
+    console.log "Req body:"
+    console.log req.body
+    console.log "------------------------"
+    console.log "Req params:"
+    console.log req.params
+    change = {}
+    unless entry.korean.word == req.body.entry.korean
+      change.korean = {}
+      change.korean.word = req.body.entry.korean
+      change.korean.length = req.body.entry.korean.length
+    change.hanja = req.body.entry.hanja  unless entry.hanja == req.body.entry.hanja
+    unless entry.definitions.english == [ req.body.entry.english ]
+      change.definitions = {}
+      change.definitions.english = req.body.entry.english
+    entry.hanja = req.body.entry.hanja
+    console.log "------------------------"
+    console.log "Changes:"
+    console.log change
+    console.log "------------------------"
+    console.log "Updated entry:"
+    console.log entry
+    entry.save (err) ->
+      if err
+        console.log "Save error"
+        console.log err
+      else
+        update = new Update()
+        update.change = change
+        update.user_id = req.session.user._id
+        update.word_id = entry._id
+        update.save (err) ->
+          if err
+            console.log "Save error"
+            console.log err
+      switch req.params.format
+        when "json"
+          res.send entry.toObject()
+        else
+          req.flash "info", "Entry updated"
+          res.redirect "/entries/" + req.params.id
+
+exports.delete = (req, res, next) ->
+  Entry.findById req.params.id, (err, d) ->
+    return next(new NotFound("entry not found"))  unless d
+    d.remove ->
+      switch req.params.format
+        when "json"
+          res.send "true"
+        else
+          req.flash "info", "entry deleted"
+          res.redirect "/"
+
+
+
+exports.batchEdit = (req, res, next) ->
+  console.log "Batch edit, baby"

@@ -1,21 +1,21 @@
-.row
+.row.editable
   .span4
     - if ((typeof(result.korean.hangul) == 'undefined') || (result.korean.hangul == ''))
       h2
-        a(href="/entries/#{result._id}") (Undefined)
+        a(href="/entries/#{result._id}")
+          span(data-name="entry[korean][hangul]") (Undefined)
     -else
       h2 
-        a(href="/#{result.korean.hangul}") #{result.korean.hangul}
+        a(href="/entries/#{result._id}", data-name="entry[korean][hangul]")= result.korean.hangul
   
-    h4= result.hanja
+    h4
+      span(data-name='entry[hanja]')= result.hanja
   
     .edit
       - if (typeof currentUser !== 'undefined')
         p
-          a(href="/entries/#{result.id}/edit") Edit
-      - else
-        p
-          small (Login to edit)
+          small Double-click to edit
+          //a(href="/entries/#{result.id}/edit") Edit
   
   
   .span6
