@@ -8,6 +8,22 @@ This repository contains the [kdict.org](http://kdict.org) site code, as well as
 Visit [kdict.org](http://kdict.org) to use the dictionary, download the raw data or contribute to the project.
 
 
+## Installation
+
+Here's how to get a local copy of KDict running for development purposes:
+
+1. Download the source
+```
+$ git clone git://github.com/bhumphreys/kdict.git
+```
+2. Install [NPM](http://npmjs.org/)
+3. Install the required packages
+4. Install [MongoDB](http://www.mongodb.org/)
+5. Download the [latest data dump](http://kdict.org/developers/download) and import using ```[mongoimport](http://www.mongodb.org/display/DOCS/Import+Export+Tools#ImportExportTools-mongoimport)```
+6. Start an instance of the MongoDB server ```mongod```
+7. Start KDict server with ```coffee app.coffee```
+
+
 ## Data
 
 The core of KDict is the dictionary data. The project's main goal is to provide high-quality data that can be used in any Korean-language project.
