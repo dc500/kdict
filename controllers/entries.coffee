@@ -12,14 +12,15 @@ exports.show = (req, res, next) ->
     keyval = generalString(req.params.word)
     query[keyval[0]] = keyval[1]
 
-  Entry.find query, (err, entries) ->
-    return next(new NotFound("Entry not found"))  unless entries
+  Entry.find(query).populate('updates').run (err, entries) ->
+    return next(new NotFound("Entry not found")) unless entries
     console.log entries
+    console.log entries.length
     if req.params.id
       title = entries[0].korean.hangul
     else
       title = req.params.word
-    res.render "entries/show", locals:
+    res.render "entries/showMultiple", locals:
       entries: entries
       title:   title
 

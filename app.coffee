@@ -166,7 +166,7 @@ app.get '/developers/download/?',   static.download
 
 entries = require('./controllers/entries')
 app.get  '/:word.:format?',       entries.show
-app.put  '/entries/:id.:format?', entries.show
+app.get  '/entries/:id.:format?', entries.show
 
 app.get  '/entries/new/?',            requireLogin, entries.new
 app.post '/entries/?',                requireLogin, entries.create
@@ -186,9 +186,7 @@ app.get "/", (req, res, next) ->
   unless isEmpty(req.query)
     entries.search req, res, next
   else
-    res.render "index",
-      title: "Korean dictionary"
-      locals: q: ""
+    static.index req, res, next
 
 app.use (err, req, res, next) ->
   if "ENOENT" == err.code

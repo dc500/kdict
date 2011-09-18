@@ -98,12 +98,13 @@ defineModels = (mongoose, fn) ->
       table: String
       wordid: Number
 
-    revision:
-      type: Number
-      default: 1
-      required: true
+    # NEW: Not sure if this is overkill on data duplication
+    updates: [ ObjectId ]
 
+    # Used to identify entries with problems. Set automatically by validation tools
     flags: [ type: String ]
+
+    # More general-use, users able to set
     tags: [
       type: String
       index: true
@@ -161,9 +162,10 @@ defineModels = (mongoose, fn) ->
       default: 1
 
     created_at:
-      type: Date
-      default: Date.now
+      type:     Date
+      default:  Date.now
       required: true
+      index:    true
   )
 
 

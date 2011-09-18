@@ -2,14 +2,24 @@ function updateDetectedLang() {
     var val = $("#search").val();
     if (val == "") {
         $("#detect").html( "" );
+        $("ul#lang-select li").removeClass('selected');
+        $("ul#lang-select li.selected").removeClass('selected');
+        $("li#auto").addClass('selected');
         return;
     }
 
     var type = korean.detect_characters(val);
-    $("#detect").html( "Language: " + type );
+    // Set all to undone
+    $("ul#lang-select li.selected").removeClass('selected');
+    $("li#" + type).addClass('selected');
 }
 
 $(document).ready(function(){
+
+    $("ul#lang-select a").click(function() {
+        $("ul#lang-select li").removeClass('selected');
+        this.parent().addClass('selected');
+    });
 
     //var searchDefault = $("#search").val();
     $("#search").focus(function(){  

@@ -1,22 +1,16 @@
-.row
-  .span16
-    ul.segmented-control
-        li#auto
-            a(href='#auto') Auto
-        li#english
-            a(href='#') English
-        li#korean
-            a(href='#') Korean
-        li#hanja
-            a(href='#') Hanja
-        li#phonetic
-            a(href='#') Phonetic
-
-    #searchbox
-      form( method="get", action="/" )
-        input(type="text", name="q", id="search", class="search", value=q || '')
-        input(type="submit", class="search-button", value='O')
-    
-      div.light
-        p#detect Language: Unknown
-    
+ul#lang-select(class="segmented-control")
+  li#auto
+    a(href='#') Auto
+  li#english
+    a(href='#') English
+  li#hangul
+    a(href='#') 한글
+  li#hanja
+    a(href='#') 漢字
+  li#phonetic
+    a(href='#') /phonetic/
+#searchbox
+  form( method='get', action='/' )
+    input(type='text', name='q', id='search', class='search', value=q || '', placeholder="Search")
+    span.help-block Type your query, then hit Enter
+    //input(type='submit', class='btn search-btn', value='Q')

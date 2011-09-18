@@ -1,6 +1,11 @@
 step = require("step")
 path = require("path")
 fs   = require("fs")
+mongoose = require('mongoose')
+Entry    = mongoose.model('Entry')
+Update   = mongoose.model('Update')
+User     = mongoose.model('User')
+
 
 exports.notFound = (req, res) ->
   res.render "404", status: 404
@@ -9,10 +14,24 @@ exports.data = (req, res, next) ->
   file = req.params.file
   path = __dirname + "/data/" + file
   res.download path, ((err) ->
-    return next(err)  if err
+    return next(err) if err
     console.log "transferred %s", path
   ), (err) ->
 
+exports.index = (req, res, next) ->
+  User.find().sort('score', 1).limit(10).run (err, top_users) ->
+    return next(err) if err
+    Update.find( type: "new" ).populate('user').sort('created_at', 1).limit(10).run (err, new_updates) ->
+      return next(err) if err
+      Update.find().populate('user').sort("created_at", 1).limit(10).run (err, updates) ->
+        return next(err) if err
+        res.render "index",
+          title: "Korean dictionary"
+          locals:
+            q: ""
+            top_users:      top_users
+            new_updates:    new_updates
+            recent_updates: updates
 
 exports.about = (req, res) ->
   res.render "about", title: "About"

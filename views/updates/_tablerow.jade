@@ -1,0 +1,9 @@
+include ../mixins
+tr(class="#{tablerow.type}")
+  td
+    - if (tablerow.type == 'delete')
+      a(href="/updates/#{tablerow.id}")= tablerow.after.korean.hangul
+    - else
+      a(href="/entries/#{tablerow.entry}")= tablerow.after.korean.hangul
+  td 
+    mixin username_with_score(tablerow.user)

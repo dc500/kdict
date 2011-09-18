@@ -1,0 +1,83 @@
+.row
+  .span3
+    h2 Definitions
+
+  .span8
+    // Definitions etc
+    // TODO Stupid bug
+    //- each defs, lang in d.definitions
+
+    h4 English
+    ul
+    - each def, i in full.definitions.english
+      li= def
+
+    small #{full.hanja}
+  .span5
+    p
+      - if (typeof currentUser !== 'undefined')
+        a(href='/entries/#{full._id}/edit') Edit
+      - else
+        a(href='/login') Login to edit
+
+    form( method="get", action="/", class="form-stacked")
+      .clearfix
+        label(for='search') Search
+        .input
+          input(type="text", name="q", id="search", class="search")
+
+      button(type="submit", class="btn primary") Search
+
+
+
+.row
+  .span3
+    h3 Examples
+
+  .span6
+    blockquote
+      p 역시 마찬가지로, 단순히 고통이라는 이유 때문에 고통 그 자체를 사랑하거나 추구하거나 소유하려는 자는 없다. 다만 노역과 고통이 아주 큰 즐거움을 선사하는 상황이 때로는 발생하기 때문에 고통을 찾는 사람이 있는 것이다. 간단한 예를 들자면, 모종의 이익을 얻을 수도 없는데 힘든 육체적 노력을 기꺼이 할 사람이 우리들 중에 과연 있겠는가? 하지만 귀찮은 일이 뒤따르지 않는 즐거움을 누리는 것을 선택한 사람, 혹은 아무런 즐거움도 생기지 않는 고통을 회피하는 사람을 누가 탓할 수 있겠는가
+      small
+        a(href='#') source
+  .span6
+    blockquote
+      p …neque porro quisquam est, qui dolorem ipsum quia dolor sit amet, consectetur, adipisci velit, sed quia non numquam eius modi tempora incidunt ut labore et dolore magnam aliquam quaerat voluptatem. Ut enim ad minima veniam, quis nostrum exercitationem ullam corporis suscipit laboriosam, nisi ut aliquid ex ea commodi consequatur? Quis autem vel eum iure reprehenderit qui in ea voluptate velit esse quam nihil molestiae consequatur, vel illum qui dolorem eum fugiat quo voluptas nulla pariatur?
+      small
+        a(href='#') source
+
+.row
+  .span3
+    h3 Revisions
+    p Full history of changes made
+
+  .span13
+    != partial('../updates/short', full.updates)
+
+
+.row
+  .span3
+    h3 Internal
+    p This information is useful for developers
+
+  .span13
+    dl
+      dt Internal ID
+      dd= full._id
+    dl
+      dt Submitter
+      dd= full.legacy.submitter
+    dl
+      dt WordID
+      dd= full.legacy.wordid
+    dl
+      dt Table
+      dd= full.legacy.table
+
+    h3 Flags
+    - if (full.flags.length != 0)
+      ul
+      - each flag, i in full.flags
+        li= flag
+    - else
+      p (none)
+
