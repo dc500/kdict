@@ -21,9 +21,9 @@ exports.data = (req, res, next) ->
 exports.index = (req, res, next) ->
   User.find().sort('score', 1).limit(10).run (err, top_users) ->
     return next(err) if err
-    Update.find( type: "new" ).populate('user').sort('created_at', 1).limit(10).run (err, new_updates) ->
+    Update.find( type: "new" ).populate('user', ['entry', 'korean.hangul']).sort('created_at', 1).limit(10).run (err, new_updates) ->
       return next(err) if err
-      Update.find().populate('user').sort("created_at", 1).limit(10).run (err, updates) ->
+      Update.find().populate('user', ['entry', 'korean.hangul']).sort("created_at", 1).limit(10).run (err, updates) ->
         return next(err) if err
         res.render "index",
           title: "Korean dictionary"

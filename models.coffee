@@ -5,10 +5,10 @@
 # Post-process stuff to do
 # Define length
 # Define phonetic representations
-# validate hangul, add flag
-# validate hanja, add flag
-# validate english, add flag
-# validate presence of def, add flag
+# validate hangul, add tag
+# validate hanja, add tag
+# validate english, add tag
+# validate presence of def, add tag
 
 crypto = require("crypto")
 
@@ -34,18 +34,18 @@ valPOS = (value) ->
   true
 
 valAndLabel = (entry) ->
-  entry.flags.push('bad hangul')  unless valHangul(entry.korean.hangul)
-  entry.flags.push('bad English') unless valEnglish(entry.definitions.english[0])
+  entry.tags.push('bad hangul')  unless valHangul(entry.korean.hangul)
+  entry.tags.push('bad English') unless valEnglish(entry.definitions.english[0])
 
-  flag = null
+  tag = null
   for hanja in entry.hanja
     if !valHanja(hanja)
-      flag = 'bad_hanja'
+      tag = 'bad_hanja'
       break
-  if flag
-    entry.flags.push(flag)
+  if tag
+    entry.tags.push(tag)
 
-  entry.flags.push('bad hanja')   unless valHanja(entry.hanja)
+  entry.tags.push('bad hanja')   unless valHanja(entry.hanja)
   entry.save()
 
 
@@ -55,25 +55,8 @@ defineModels = (mongoose, fn) ->
   ObjectId = Schema.ObjectId
 
 
-
-  Entry = new Schema(
-    korean:
-      hangul:
-        type: String
-        required: true
-        validate: [ valHangul, "Korean must not contain English characters" ]
-
-      length:
-        type: Number
-        required: true
-        index: true
-      # TODO Phonetic stuff
-      # TODO: mr: { type: String, index: false, validate: [ valAlphabet, 'McCune-Reischauer must only contain alphabetic characters' },
-      # TODO: yale: { type: String, index: false, validate: [ valAlphabet, 'Yale must only contain alphabetic characters' },
-      # TODO: rr: { type: String, index: false, validate: [ valAlphabet, 'Revised Romanization must only contain alphabetic characters' },
-      # TODO: ipa: { type: String, index: false, validate: [ valIPA, 'IPA must only contain IPA characters' },
-      # TODO: simplified // our hacky thing
-
+  # Bundles up all data for a single 'meaning' thinking from the Korean perspective
+  Meaning = new Schema(
     hanja: [
       type: String
       validate: [ valHanja, "Hanja must only contain Chinese (Hanja) characters" ]
@@ -95,14 +78,40 @@ defineModels = (mongoose, fn) ->
 
     legacy:
       submitter: String
-      table: String
-      wordid: Number
+      table:     String
+      wordid:    Number
+  )
+  Meaning.virtual("id").get ->
+    @_id.toHexString()
 
-    # NEW: Not sure if this is overkill on data duplication
-    updates: [ ObjectId ]
+  Meaning.virtual("definitions.english_all").get ->
+    @definitions.english.join('; ')
+  Meaning.virtual("definitions.english_all").set (list) ->
+    @definitions.english.list.split('; ')
 
-    # Used to identify entries with problems. Set automatically by validation tools
-    flags: [ type: String ]
+
+
+  Entry = new Schema(
+    korean:
+      hangul:
+        type: String
+        required: true
+        index:
+          unique: true
+        validate: [ valHangul, "Korean must not contain English characters" ]
+
+      length:
+        type: Number
+        required: true
+        index: true
+      # TODO Phonetic stuff
+      # TODO: mr: { type: String, index: false, validate: [ valAlphabet, 'McCune-Reischauer must only contain alphabetic characters' },
+      # TODO: yale: { type: String, index: false, validate: [ valAlphabet, 'Yale must only contain alphabetic characters' },
+      # TODO: rr: { type: String, index: false, validate: [ valAlphabet, 'Revised Romanization must only contain alphabetic characters' },
+      # TODO: ipa: { type: String, index: false, validate: [ valIPA, 'IPA must only contain IPA characters' },
+      # TODO: simplified // our hacky thing
+
+    meanings: [ Meaning ]
 
     # More general-use, users able to set
     tags: [
@@ -110,14 +119,12 @@ defineModels = (mongoose, fn) ->
       index: true
       sparse: true
     ]
+
+    # NEW: Not sure if this is overkill on data duplication
+    updates: [ ObjectId ]
   )
   Entry.virtual("id").get ->
     @_id.toHexString()
-
-  Entry.virtual("definitions.english_all").get ->
-    @definitions.english.join('; ')
-  Entry.virtual("definitions.english_all").set (list) ->
-    @definitions.english.list.split('; ')
 
       
 

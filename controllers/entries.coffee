@@ -2,17 +2,16 @@ mongoose = require('mongoose')
 Entry    = mongoose.model('Entry')
 korean   = require("../public/javascripts/korean.js")
 
-###
 exports.show = (req, res, next) ->
-  keyval = generalString(req.params.word)
-  query[keyval[0]] = keyval[1]
-  Entry.findById( req.params.id ).populate('updates').run (err, entry) ->
+  console.log "Getting for " + req.params.word
+    #keyval = generalString(req.params.word)
+    #query[keyval[0]] = keyval[1]
+  Entry.findOne( { 'korean.hangul' : req.params.word } ).populate('updates').run (err, entry) ->
     return next(new NotFound("Entry not found")) unless entry
     console.log entry
     res.render 'entries/show', locals:
       entry: entry
       title: entry.korean.hangul
-###
 
 # Is this needed?
 exports.showById = (req, res, next) ->
@@ -207,8 +206,8 @@ generalString = (query) ->
   val = new RegExp(query, 'i')
   switch korean.detect_characters(query)
     when 'hangul'  then key = 'korean.hangul'
-    when 'english' then key = 'definitions.english'
-    when 'hanja'   then key = 'hanja'
+    when 'english' then key = 'meanings.definitions.english'
+    when 'hanja'   then key = 'meanings.hanja'
   return [key, val]
 
 

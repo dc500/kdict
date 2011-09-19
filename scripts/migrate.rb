@@ -22,16 +22,22 @@ module KDict
             # inserting into
             @entries = db.collection("entries")
             @entries.drop()
+            @entries.create_index([
+                ['korean.hangul', Mongo::ASCENDING],
+            ])
 
             @updates = db.collection("updates")
             @updates.drop()
+            @entries.create_index([
+                ['entry', Mongo::ASCENDING],
+            ])
 
             @users = db.collection("users")
             @users.drop()
             @user_id = @users.insert( {
               "display_name" => 'Migration script',
-              "username" => 'migrate.rb',
-              "email" => 'migrate',
+              "username"     => 'migrate',
+              "email"        => 'migrate',
             })
 
 
@@ -61,12 +67,12 @@ module KDict
             # Start with largest DB
             cursor.each do |row|
                 count += 1
-                if count % 1000 == 0
+                if count % 100 == 0
                     puts "#{count} of #{total}"
                 end
 
                 output = Hash.new()
-                flags = Array.new()
+                tags = Array.new()
 
                 if @evil_ids.include?(row['wordid'])
                     next
@@ -94,7 +100,7 @@ module KDict
                             #puts sub_cursor.count
                             puts "\n\n"
                         elsif sub_cursor.count == 0
-                            flags.push("Could not find linked article in '#{ row['def'] }'")
+                            tags.push("Could not find linked article in '#{ row['def'] }'")
                         end
 
 
@@ -107,23 +113,16 @@ module KDict
                 end
 
                 if (row['def'] =~ /^see /i)
-                    flags.push("Definition includes See...")
+                    tags.push("English def is see")
                     # Ideally we want to be able to link these
                 end
 
 
                 # if any required fields are empty, flip out
-                'def word'.split.each do |key|
-                    if (row[key].nil? or row[key] == "")
-                        flags.push("required field #{ key } is empty")
-                    end
-                end
-
-                if output['korean'] =~ /다\s*$/
-                    if (output['pos'] != 'verb' ||
-                        output['pos'] != 'adjective')
-                    puts output.inspect
-                    flags.push("Word with 다 ending appears to not be a verb/adj")
+                { 'def' => 'english',
+                  'word' => 'hangul'}.each_pair do |old, new|
+                    if (row[old].nil? or row[old] == "")
+                        tags.push("required field #{ new } empty")
                     end
                 end
 
@@ -133,36 +132,42 @@ module KDict
                     row['def'] = row['def'][0,1].downcase + row['def'][1,row['def'].length]
                 end
 
-                eng, en_flags = KDict::Migration.clean_english(row['def'])
-                if flags.size > 0
-                    flags.push(en_flags)
+                eng, en_tags = KDict::Migration.clean_english(row['def'])
+                if tags.size > 0
+                    tags.push(en_tags)
                 end
                 output['definitions'] = Hash.new
                 output['definitions']['english'] = Array.new
                 output['definitions']['english'].push(eng)
 
-                output['korean'] = Hash.new
-                output['korean']['hangul'], flag  = KDict::Migration.clean_korean(row['word'])
-                if flag
-                    flags.push(flag)
+                kor = Hash.new
+                kor['hangul'], tag  = KDict::Migration.clean_korean(row['word'])
+                if tag
+                    tags.push(tag)
                 end
                 
                 # Saving the output for search usage
                 # This is now done by a mapreduce op
-                output['korean']['length'] = output['korean']['hangul'].length
+                kor['length'] = kor['hangul'].length
 
 
                 if (collection.name != "p_korean")
-                    hanja, flag  = KDict::Migration.clean_hanja(row['hanja'])
+                    hanja, tag  = KDict::Migration.clean_hanja(row['hanja'])
                     output['hanja'] = [ hanja ]
-                    if flag
-                        flags.push(flag)
+                    if tag.size > 0
+                        tags.push(tag)
                     end
                 end
 
-                output['pos'], flag = KDict::Migration.clean_pos(row['pos'])
-                if flag
-                    flags.push(flag)
+                output['pos'], tag = KDict::Migration.clean_pos(row['pos'])
+                if tag.size > 0
+                    tags.push(tag)
+                end
+                if kor['hangul'] =~ /다\s*$/
+                    if (output['pos'] !~ /^verb|adjective$/)
+                        #puts "Output: " + kor['hangul'] + ' ' + output['pos']
+                        tags.push("Word with 다 ending appears to not be a verb/adj")
+                    end
                 end
 
                 # Get rid of empty things
@@ -172,16 +177,16 @@ module KDict
                     end
                 end
 
-                #if (flags.size > 0)
+                #if (tags.size > 0)
                 #    puts row.inspect
                 #end
 
 
                 #output['submitter'] = 'Ruby migration tool'
-                # TODO Do we want to change the way flags are being handled?
+                # TODO Do we want to change the way tags are being handled?
                 #      Instead they could be set by running the Mongoose validation
                 #      on each record, via Javascript
-                output['flags'] = flags
+                output['tags'] = tags
 
                 output['legacy'] = Hash.new
                 output['legacy']['wordid']    = row['wordid']
@@ -192,20 +197,59 @@ module KDict
                 #output['updated_at'] = Time.now;
 
                 # Write the data
-                id = @entries.insert( output )
+                # THIS IS WAY TOO SLOW
+                count = @entries.find( 'korean.hangul' => kor['hangul'] ).count
+                if count > 0
+                    puts "Updating existing #{kor['hangul']}"
+                    entry_id = @entries.update(
+                        { 'korean.hangul' => kor['hangul'] }, 
+                        {
+                            "$push" => { "meanings" => output }
+                        },
+                        { :upsert => true }
+                    )
+                else
+                    puts "New entry: #{kor['hangul']}"
+                    entry_id = @entries.insert( 
+                        {
+                            'korean' => kor,
+                            'meanings' => [ output ],
+                        }
+                    )
+                end
+
+                # UPSERT SEEMS BROKEN
+
+                # We now do an upsert, not a plain insert
+                #entry_id = @entries.save(
+                #    { 'korean.hangul' => kor['hangul'] }, 
+                #    {
+                #        'korean' => kor,
+                #        "$push" => { "meanings" => output }
+                #    },
+                #    { :upsert => true }
+                #)
+
+
 
                 # TODO: "Update" entries
                 update = Hash.new
-                update['entry']  = id
+                update['entry']  = entry_id
                 update['after']  = output
                 update['type']   = 'new'
                 update['status'] = Hash.new
-                update['user'] = @user_id
-                update['status']['type']      = 'pending'
-                update['status']['update_at'] = Time.now
-                update['status']['user']      = @user_id
+                update['user']      = @user_id
                 update['revision_num'] = 1
-                @updates.insert( update )
+                update_id = @updates.insert( update )
+                
+                @entries.update(
+                    { '_id' => entry_id },
+                    { "$push" => { 'update_ids' => update_id } },
+                    { :upsert => true }
+                )
+
+
+
             end
         end
 
@@ -217,7 +261,7 @@ module KDict
         end
         
         def self.clean_korean(raw)
-            flag = false
+            tag = false
             if (raw.class == Fixnum)
                 clean = raw.to_s
             else
@@ -226,15 +270,24 @@ module KDict
 
             # God knows what we have in here
             if (clean =~ /[a-z]/i)
-                flag = 'Korean data contains alphabet characters'
+                tag = 'Korean data contains alphabet characters'
             end
 
-            return clean, flag
+            # Some have \t or \r literals
+            clean.gsub(!/\\t|\\r/, '')
+
+
+            
+            # leading/trailing spaces
+            clean.gsub!(/^\s+/, '')
+            clean.gsub!(/\s+$/, '')
+
+            return clean, tag
         end
 
         # Insert into new collection
         def self.clean_english(raw)
-            flags = []
+            tags = []
             # raw can be a number like "18"
             if (raw.class == Fixnum)
                 clean = raw.to_s
@@ -254,7 +307,7 @@ module KDict
 
             # non-english content in english def
             if !clean.ascii_only?
-                flags.push 'Non-ascii content in English def'
+                tags.push 'Non-ascii in English def'
             end
             
             # I don't think we should have plurals
@@ -299,12 +352,12 @@ module KDict
 
             # If we have weird parens
             if (clean =~ /[\[\]\{\}]/)
-                flags.push "English contains square brackets or braces"
+                tags.push "English contains square brackets or braces"
             end
 
             # goddamn backslashes
             if (clean =~ /\\/)
-                flags.push 'English contains backslashes'
+                tags.push 'English contains backslashes'
 
                 # First change \\011 which is a full-with space
                 clean.gsub!('\\\\011', ' ')
@@ -334,7 +387,7 @@ module KDict
             # Awful backtick character
             if (clean =~ /`/)
                 #if (clean =~ /`s/)
-                #    flags.push("Replaced ` with ' but wasn't in front of s")
+                #    tags.push("Replaced ` with ' but wasn't in front of s")
                 #end
                 clean.gsub!(/`/, "'")
             end
@@ -346,7 +399,7 @@ module KDict
 
             # Acronym probably
             if (clean =~ /^[A-Z0-9 ,']+$/)
-                flags.push 'English contains acronym?'
+                tags.push 'English contains acronym?'
             end
 
             # Want to make two instances of the word
@@ -367,64 +420,64 @@ module KDict
             #    puts "---------"
             #end
 
-            return clean, flags
+            return clean, tags
         end
 
-        def self.clean_pos(in_tag)
-            flag = false
-            tag  = nil
+        def self.clean_pos(in_pos)
+            tag = false
+            pos  = nil
 
-            case in_tag
+            case in_pos
             when ""
             when 0
             when 1, "명"
-                tag = 'noun'
+                pos = 'noun'
             when 2, "동"
-                tag = 'verb'
+                pos = 'verb'
             when 3, "부"
-                tag = 'adverb'
+                pos = 'adverb'
             when 4
-                tag = 'adjective'
+                pos = 'adjective'
             when 5
-                tag = 'counter'
+                pos = 'counter'
             when 6
                 # ???
             when 7, "지"
-                tag = 'location'
+                pos = 'location'
             when 9, "수"
-                tag = 'number'
+                pos = 'number'
             when 10
-                flag = true
+                tag = true
             when "대" # pronoun
-                tag = 'pronoun'
+                pos = 'pronoun'
             when "감"
-                tag = 'exclamation'
+                pos = 'exclamation'
             when "관"
-                tag = 'interjection'
+                pos = 'interjection'
             when "접"
-                tag = 'preposition'
+                pos = 'preposition'
             when "의" # posession?
-                tag = 'possession'
-                flag = 'possessive POS unsure'
+                pos = 'possession'
+                tag = 'possessive POS unsure'
             when "도" 
             when "보" # helping verb
             when "불" # ??
-                flag = 'unknown POS tag'
+                tag = 'unknown POS tag'
             when "형" # adj
             when "curious" 
                 delete = true
             end
 
-            if tag.nil?
-                flag = "POS tag '#{ tag }' unrecognised or not found"
+            if pos.nil?
+                tag = "unknown POS tag '#{ in_pos }'"
             end
 
-            return tag, flag # rhymes, hee hee
+            return pos, tag
         end
 
         def self.clean_hanja(raw)
             clean = String.new(raw)
-            flag = false
+            tag = false
 
             # Destroy evil HTML
             #clean.gsub!(/<.*?>/, '')
@@ -432,10 +485,10 @@ module KDict
             clean = kill_html(clean)
 
             if (clean =~ /[a-z0-9 -,]/i)
-                flag = "Hanja contains alphanumeric"
+                tag = "Hanja contains alphanumeric"
             end
 
-            return clean, flag
+            return clean, tag
         end
 
         # Hanja can be a clever mix of HTML with JS and HTML elements within the JS

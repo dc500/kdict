@@ -12,36 +12,29 @@ include ../includes/large-search
     - if (entries.length == 0)
       p No results found
     - else
-      table.zebra-striped
-        tbody
-          - prev_hangul = ""
-          - each entry in entries
-            tr.editable
-              td
-                // This seems like kind of a hack really
-                - if (prev_hangul !== entry.korean.hangul)
-                  h3
-                    a(href='/#{entry.korean.hangul}')= entry.korean.hangul
-
-              td
-                span(data-name='entry[pos]', data-options='[["Noun", "noun"], ["Adjective", "adjective"]]')= entry.pos
-              td
-                span(data-name='entry[hanja]')= entry.hanja
-              td
-                span(data-name='entry[definitions][english_all]')= entry.definitions.english_all
-              td
-                - if (entry.flags.length > 0)
-                  img(src='/images/icons/flag_orange.gif')
-                  |  x
-                  #{entry.flags.length}
-              td
-                a(href='/entries/#{entry.id}') ID
-            - prev_hangul = entry.korean.hangul
+      - each entry in entries
+        .row
+          .span3
+            h3
+              a(href='/#{entry.korean.hangul}')= entry.korean.hangul
+            - if (entry.tags.length > 0)
+              p
+                img(src='/images/icons/flag_orange.gif')
+                |  x
+                #{entry.tags.length}
+          .span12
+            table.zebra-striped
+              tbody
+                - each meaning in entry.meanings
+                  tr
+                    td= meaning.hanja
+                    td= meaning.definitions.english_all
+                //span(data-name='entry[pos]', data-options='[["Noun", "noun"], ["Adjective", "adjective"]]')= entry.pos
 
 
-- if (entries.length == 0)
+//- if (entries.length == 0)
   p No results found
-- else
+//- else
   - prev_hangul = ""
   - each entry in entries
     .row
@@ -56,10 +49,10 @@ include ../includes/large-search
         small= entry.pos
         p= entry.definitions.english_all
       .span2
-        - if (entry.flags.length > 0)
+        - if (entry.tags.length > 0)
           img(src='/images/icons/flag_orange.gif')
           |  x
-          #{entry.flags.length}
+          #{entry.tags.length}
       - prev_hangul = entry.korean.hangul
 
 

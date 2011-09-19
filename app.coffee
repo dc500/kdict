@@ -165,7 +165,6 @@ app.get '/developers/contribute/?', static.developers
 app.get '/developers/download/?',   static.download
 
 entries = require('./controllers/entries')
-#app.get  '/:word.:format?',       entries.show # Temporarily disabled
 app.get  '/entries/:id.:format?', entries.showById
 
 # PROBLEM: What if we want to find all entries for 'new'
@@ -183,6 +182,11 @@ app.get  '/entries/batch',             requireLogin, entries.batchEdit
 updates = require('./controllers/updates')
 app.get '/updates',                   updates.list
 app.get '/updates/:id',               updates.show
+
+# This should be After all other routes
+app.get  '/:word.:format?',       entries.show # Temporarily disabled
+
+
 
 # Root
 app.get "/", (req, res, next) ->

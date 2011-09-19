@@ -11,26 +11,21 @@ script
   .page-header
     h1
       span(data-name='entry[korean][hangul]')= entry.korean.hangul
-      small
-        span(data-name='entry[pos]')= entry.pos
   
   .row
     .span3
-      h2 Definitions
-  
+      h2 Summary
+
     .span8
-      // Definitions etc
-      // TODO Stupid bug
-      //- each defs, lang in d.definitions
-  
-      h4 English
-      ul
-      - each def, i in entry.definitions.english
-        li
-          span(data-name='entry[definitions][english][]')= def
-  
-      small
-        span(data-name='entry[hanja]')= entry.hanja
+      h6 Meanings
+      ol
+        - each meaning, i in entry.meanings
+          li
+            - if (meaning.hanja != '')
+              span.hanja (#{meaning.hanja}) 
+            span.english= meaning.definitions.english_all
+
+
     .span5
       p
         - if (typeof currentUser !== 'undefined')
@@ -46,7 +41,6 @@ script
             input(type="text", name="q", id="search")
   
         button(type="submit", class="btn primary") Search
-  
   
   
   .row
@@ -73,26 +67,29 @@ script
     .span3
       h3 Internal
       p This information is useful for developers
-  
-    .span13
-      dl
-        dt Internal ID
-        dd= entry._id
-      dl
-        dt Submitter
-        dd= entry.legacy.submitter
-      dl
-        dt WordID
-        dd= entry.legacy.wordid
-      dl
-        dt Table
-        dd= entry.legacy.table
-  
-      h3 Flags
-      - if (entry.flags.length != 0)
-        ul
-        - each flag, i in entry.flags
-          li= flag
+
+    .span4
+      h3 Tags
+      - if (entry.tags.length != 0)
+        ul.tags
+        - each tag, i in entry.tags
+          li= tag
       - else
         p (none)
+  
+    .span9
+      - each meaning in entry.meanings
+        dl
+          dt Internal ID
+          dd= meaning._id
+        dl
+          dt Submitter
+          dd= meaning.legacy.submitter
+        dl
+          dt WordID
+          dd= meaning.legacy.wordid
+        dl
+          dt Table
+          dd= meaning.legacy.table
+  
 
