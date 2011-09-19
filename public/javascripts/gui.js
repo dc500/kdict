@@ -26,6 +26,14 @@ $(document).ready(function(){
   $("#search").focus();
   updateDetectedLang();
 
+  $('tr.editable').editableSet({
+    action: '/customer/1',
+    dataType: 'json',
+    afterSave: function() {
+      alert( 'Saved Successfully!' );
+    }
+  });
+  
 
   $("a.show-change-raw").click(function(){
     var pre = $(this).next("pre");

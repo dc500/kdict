@@ -164,14 +164,14 @@ exports.search = (req, res, next) ->
 
   paginator = new Paginator req.query
   order = "korean.length"
-  Entry.count(query).limit(paginator.limit).skip(paginator.skip).sort(order, -1).run (err, count) ->
+  Entry.count(query).limit(paginator.limit).skip(paginator.skip).sort(order, 'ascending').run (err, count) ->
     if err
       console.log err
       next err
     else
       paginator.setCount count
       console.log paginator
-      Entry.find(query).limit(paginator.limit).skip(paginator.skip).sort(order, -1).run (err, entries) ->
+      Entry.find(query).limit(paginator.limit).skip(paginator.skip).sort(order, 'ascending').run (err, entries) ->
         if err
           console.log err
           next err

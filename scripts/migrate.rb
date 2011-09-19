@@ -29,9 +29,9 @@ module KDict
             @users = db.collection("users")
             @users.drop()
             @user_id = @users.insert( {
-              display_name: 'Migration script',
-              username: 'migrate.rb',
-              email: 'migrate',
+              "display_name" => 'Migration script',
+              "username" => 'migrate.rb',
+              "email" => 'migrate',
             })
 
 
@@ -149,7 +149,7 @@ module KDict
                 
                 # Saving the output for search usage
                 # This is now done by a mapreduce op
-                # output['korean']['length'] = output['korean']['word'].length
+                output['korean']['length'] = output['korean']['hangul'].length
 
 
                 if (collection.name != "p_korean")
@@ -181,7 +181,7 @@ module KDict
                 # TODO Do we want to change the way flags are being handled?
                 #      Instead they could be set by running the Mongoose validation
                 #      on each record, via Javascript
-                #output['flags'] = flags
+                output['flags'] = flags
 
                 output['legacy'] = Hash.new
                 output['legacy']['wordid']    = row['wordid']

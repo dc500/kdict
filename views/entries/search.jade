@@ -14,14 +14,55 @@ include ../includes/large-search
     - else
       table.zebra-striped
         tbody
+          - prev_hangul = ""
           - each entry in entries
-            tr
+            tr.editable
               td
-                h3= entry.korean.hangul
+                // This seems like kind of a hack really
+                - if (prev_hangul !== entry.korean.hangul)
+                  h3
+                    a(href='/#{entry.korean.hangul}')= entry.korean.hangul
+
               td
-                small= entry.pos
-              td= entry.hanja
-              td= entry.definitions.english_all
+                span(data-name='entry[pos]', data-options='[["Noun", "noun"], ["Adjective", "adjective"]]')= entry.pos
+              td
+                span(data-name='entry[hanja]')= entry.hanja
+              td
+                span(data-name='entry[definitions][english_all]')= entry.definitions.english_all
+              td
+                - if (entry.flags.length > 0)
+                  img(src='/images/icons/flag_orange.gif')
+                  |  x
+                  #{entry.flags.length}
+              td
+                a(href='/entries/#{entry.id}') ID
+            - prev_hangul = entry.korean.hangul
+
+
+- if (entries.length == 0)
+  p No results found
+- else
+  - prev_hangul = ""
+  - each entry in entries
+    .row
+      .span4
+        - if (prev_hangul !== entry.korean.hangul)
+          h3
+            a(href='/entries/#{entry.id}')= entry.korean.hangul
+      .span12
+        ul
+
+      li
+        small= entry.pos
+        p= entry.definitions.english_all
+      .span2
+        - if (entry.flags.length > 0)
+          img(src='/images/icons/flag_orange.gif')
+          |  x
+          #{entry.flags.length}
+      - prev_hangul = entry.korean.hangul
+
+
 
 - if (paginator.total_pages > 1)
   .row
