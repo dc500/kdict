@@ -67,7 +67,7 @@ module KDict
             # Start with largest DB
             cursor.each do |row|
                 count += 1
-                if count % 100 == 0
+                if count % 1000 == 0
                     puts "#{count} of #{total}"
                 end
 
@@ -78,6 +78,7 @@ module KDict
                     next
                 end
 
+                # Now that we're inserting multiple stuff, this shouldn't be a problem
                 if (row['def'] == "see 6000") || (row['def'] == "see gsso")
                     resource = nil
                     # skip the current record
@@ -91,10 +92,12 @@ module KDict
                     sub_cursor = resource.find( 'word' => /^\s*#{ row['word'] }\s*$/)
                         if sub_cursor.count > 1
                             puts "\n\n"
-                            puts "Found multiple possibilities"
-                            puts "#{ row['word'] } (#{ row['wordid'] })"
+                            puts "Found multiple possibilities via def '#{ row['def'] }'"
+                            puts "Original: #{ row['word'] } (#{ row['wordid'] })"
+                            puts "Results found:"
                             sub_cursor.each do |meh|
-                                puts "#{meh['word']} - #{meh['def']} (#{ meh['wordid'] })"
+                                puts "\t#{meh['word']} - #{meh['def']} (#{ meh['wordid'] })"
+                                puts "\tFull: " + meh.inspect
                             end
                             #other = sub_cursor.next_document
                             #puts sub_cursor.count
@@ -133,7 +136,7 @@ module KDict
                 end
 
                 eng, en_tags = KDict::Migration.clean_english(row['def'])
-                if tags.size > 0
+                if en_tags.size > 0
                     tags.push(en_tags)
                 end
                 output['definitions'] = Hash.new
@@ -154,13 +157,13 @@ module KDict
                 if (collection.name != "p_korean")
                     hanja, tag  = KDict::Migration.clean_hanja(row['hanja'])
                     output['hanja'] = [ hanja ]
-                    if tag.size > 0
+                    if tag
                         tags.push(tag)
                     end
                 end
 
                 output['pos'], tag = KDict::Migration.clean_pos(row['pos'])
-                if tag.size > 0
+                if tag
                     tags.push(tag)
                 end
                 if kor['hangul'] =~ /다\s*$/
@@ -200,7 +203,7 @@ module KDict
                 # THIS IS WAY TOO SLOW
                 count = @entries.find( 'korean.hangul' => kor['hangul'] ).count
                 if count > 0
-                    puts "Updating existing #{kor['hangul']}"
+                    #puts "Updating existing #{kor['hangul']}"
                     entry_id = @entries.update(
                         { 'korean.hangul' => kor['hangul'] }, 
                         {
@@ -209,7 +212,7 @@ module KDict
                         { :upsert => true }
                     )
                 else
-                    puts "New entry: #{kor['hangul']}"
+                    #puts "New entry: #{kor['hangul']}"
                     entry_id = @entries.insert( 
                         {
                             'korean' => kor,
@@ -274,7 +277,7 @@ module KDict
             end
 
             # Some have \t or \r literals
-            clean.gsub(!/\\t|\\r/, '')
+            clean.gsub!(/\\(t|r)/, '')
 
 
             

@@ -2,21 +2,28 @@
 .hero-unit
   include includes/large-search
 
+.row
+  .offset-one-third
+    .page-header
+      h1 KDict
+        small Open-source Korean dictionary
 
 .row
   .span-one-third
-    h2 Welcome
-    p Welcome to KDict, an open-source community-maintained Korean dictionary.
-  .span-one-third.column
-    h2 Community-driven
+    p (Image)
+
+  .span-one-third
+    h3 Community-driven
     p Anybody is free to add or edit entries in KDict. Adding new words as you learn them will help you later if you need to look them up, and help to create a resource the whole Korean learning community can benefit from.
     p
       a.btn(href='/contribute') Learn more
+
   .span-one-third
-    h2 Open-source
+    h3 Open-source
     p The entire KDict database is available to download and use freely in any project.
+    p Check out the data specification and download nightly data dumps.
     p
-      a.btn(href='/developers/download') View Data
+      a.btn(href='/developers/download') View data
 
 .row
   .span-one-third
@@ -25,13 +32,13 @@
       tbody
         != partial('users/tablerow', top_users)
 
-  .span-one-third.column
+  .span-one-third
     h2 New Entries
     table
       tbody
         != partial('updates/tablerow', new_updates)
   
-  .span-one-third.column
+  .span-one-third
     h2 Recently Edited
     table
       tbody

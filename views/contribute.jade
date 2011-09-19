@@ -1,28 +1,32 @@
-.page-header
-  h1= title
+.hero-unit
+  h1 Help out
+
 
 
 .row
+  .span8
+    .page-header
+      h1= title
+    p KDict is designed to be an community-based dictionary. Anyone is free to improve the dictionary by adding new definitions or modifying existing ones.
+    p If you are learning Korean, adding example sentence to entries when you look them up is a great way to remember new vocabulary.
 
-p KDict is designed to be an community-based dictionary. Anyone is free to improve the dictionary by adding new definitions or modifying existing ones.
+  .span4
+    h3 How?
+    p In order to edit the dictionary, first and log in to your account. From there you are able to edit dictionary metadata.
+    p Your changes will be made immediately, and added to a log of all the changes made to that entry.
+    p
+      a.btn(href='/signup') Sign up
+  .span4
+    p (image)
 
-p If you are learning Korean, adding example sentence to entries when you look them up is a great way to remember new vocabulary.
 
-h3.fontface Flagged Entries
+.row
+  .span6
+    h3 Tagged Entries
 
-p
-  | There are a number of entries that have been detected as requiring editing or confirmation. Please help by viewing the list of
-  a(href='/contribute/flagged') flagged entries
-
-h3.fontface How?
-
-p
-  | In order to edit the dictionary, first
-  a(href='/signup') sign up
-  |  and log in to your account. From there you are able to edit dictionary metadata.
-
-p Your changes will be made immediately, and added to a log of all the changes made to that entry.
-
+    p There are a number of entries that have been detected as requiring editing or confirmation. Please help by viewing the list of
+    p
+      a.btn(href='/contribute/flagged') View Tagged Entries
 
 
 

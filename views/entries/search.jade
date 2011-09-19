@@ -1,61 +1,40 @@
 .page-header
   h1 Search
 
-include ../includes/large-search
+.row
+  .span16
+    include ../includes/large-search
 
 
 .row
   .span16
     h2 Results
       small Showing page #{paginator.page} of #{paginator.total_pages} (#{paginator.range_str} of #{paginator.count} results)
+.row
+  .span16
 
     - if (entries.length == 0)
       p No results found
     - else
-      - each entry in entries
-        .row
-          .span3
-            h3
-              a(href='/#{entry.korean.hangul}')= entry.korean.hangul
-            - if (entry.tags.length > 0)
-              p
-                img(src='/images/icons/flag_orange.gif')
-                |  x
-                #{entry.tags.length}
-          .span12
-            table.zebra-striped
-              tbody
-                - each meaning in entry.meanings
-                  tr
-                    td= meaning.hanja
-                    td= meaning.definitions.english_all
-                //span(data-name='entry[pos]', data-options='[["Noun", "noun"], ["Adjective", "adjective"]]')= entry.pos
-
-
-//- if (entries.length == 0)
-  p No results found
-//- else
-  - prev_hangul = ""
-  - each entry in entries
-    .row
-      .span4
-        - if (prev_hangul !== entry.korean.hangul)
-          h3
-            a(href='/entries/#{entry.id}')= entry.korean.hangul
-      .span12
-        ul
-
-      li
-        small= entry.pos
-        p= entry.definitions.english_all
-      .span2
-        - if (entry.tags.length > 0)
-          img(src='/images/icons/flag_orange.gif')
-          |  x
-          #{entry.tags.length}
-      - prev_hangul = entry.korean.hangul
-
-
+      table.zebra-striped
+        tbody
+          - each entry in entries
+            tr
+              td
+                h3
+                  a(href='/#{entry.korean.hangul}')= entry.korean.hangul
+                - if (entry.tags.length > 0)
+                  p
+                    img(src='/images/icons/flag_orange.gif')
+                    |  x
+                    #{entry.tags.length}
+              td
+                ol
+                  - each meaning, i in entry.meanings
+                    li
+                      - if (meaning.hanja != '')
+                        span.hanja (#{meaning.hanja}) 
+                      span.english= meaning.definitions.english_all
 
 - if (paginator.total_pages > 1)
   .row

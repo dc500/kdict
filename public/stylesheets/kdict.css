@@ -11,6 +11,11 @@ ul.flag {
 }
 
 
+.hanja {
+    color: #999;
+}
+
+
 .topbar {
     position: relative;
     margin-bottom: 20px;
