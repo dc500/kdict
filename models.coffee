@@ -56,7 +56,7 @@ defineModels = (mongoose, fn) ->
 
 
   # Bundles up all data for a single 'meaning' thinking from the Korean perspective
-  Meaning = new Schema(
+  Sense = new Schema(
     hanja: [
       type: String
       validate: [ valHanja, "Hanja must only contain Chinese (Hanja) characters" ]
@@ -81,12 +81,12 @@ defineModels = (mongoose, fn) ->
       table:     String
       wordid:    Number
   )
-  Meaning.virtual("id").get ->
+  Sense.virtual("id").get ->
     @_id.toHexString()
 
-  Meaning.virtual("definitions.english_all").get ->
+  Sense.virtual("definitions.english_all").get ->
     @definitions.english.join('; ')
-  Meaning.virtual("definitions.english_all").set (list) ->
+  Sense.virtual("definitions.english_all").set (list) ->
     @definitions.english.list.split('; ')
 
 
@@ -111,17 +111,21 @@ defineModels = (mongoose, fn) ->
       # TODO: ipa: { type: String, index: false, validate: [ valIPA, 'IPA must only contain IPA characters' },
       # TODO: simplified // our hacky thing
 
-    meanings: [ Meaning ]
+    senses: [ Sense ]
 
     # More general-use, users able to set
     tags: [
-      type: String
-      index: true
-      sparse: true
+      type:   ObjectId
+      index:  true
+      ref:    "Tag"
     ]
 
     # NEW: Not sure if this is overkill on data duplication
-    updates: [ ObjectId ]
+    updates: [
+      type: ObjectId
+      #index: true
+      ref:  "Update"
+    ]
   )
   Entry.virtual("id").get ->
     @_id.toHexString()
@@ -136,14 +140,25 @@ defineModels = (mongoose, fn) ->
     korean.revision = korean.revision + 1
     next()
 
+  Tag = new Schema(
+    long: String
+    short:
+      type: String
+      index: true
+      required: true
+    type:
+      type:     String
+      enum:     [ "problem", "user" ]
+      required: true
+  )
 
 
   Update = new Schema(
     entry:
-      type: ObjectId
-      index: true
+      type:     ObjectId
+      index:    true
       required: true
-      ref: "Entry"
+      ref:      "Entry"
 
     user:
       type:     ObjectId
@@ -162,11 +177,6 @@ defineModels = (mongoose, fn) ->
     type:
       type: String
       enum: [ "new", "edit", "delete" ]
-
-    revision_num:
-      type: Number
-      required: true
-      default: 1
 
     created_at:
       type:     Date
@@ -250,6 +260,7 @@ defineModels = (mongoose, fn) ->
 
   mongoose.model "Entry",  Entry
   mongoose.model "Update", Update
+  mongoose.model "Tag",    Tag
   mongoose.model "User",   User
   fn()
 

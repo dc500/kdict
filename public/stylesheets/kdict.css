@@ -16,6 +16,8 @@ ul.flag {
 }
 
 
+.label.problem { background-color:#f89406; }
+
 .topbar {
     position: relative;
     margin-bottom: 20px;

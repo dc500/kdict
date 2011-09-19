@@ -39,11 +39,11 @@ exports.about = (req, res) ->
 exports.contribute = (req, res) ->
   res.render "contribute", title: "Contribute"
 
-exports.flagged = (req, res) ->
-  searchProvider.getFlags (error, flags) ->
-    res.render "contribute/flagged",
-      flags: flags
-      title: "Flagged Entries"
+exports.tagged = (req, res) ->
+  searchProvider.getTags (error, tags) ->
+    res.render "contribute/tagged",
+      tags: tags
+      title: "Tagged Entries"
 
 exports.developers = (req, res) ->
   res.render "contribute/developers", title: "Developers"

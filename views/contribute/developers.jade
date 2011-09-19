@@ -8,42 +8,62 @@
 
 
 .row
-  .span-one-third
+  .span4
+    p (Image)
+
+  .span6
     h2 Site features
     p If there's something you really want to see on KDict, who better than you to implement it? Scratching that itch is ever so satisfying.
     p If you're a Node.js developer or web developer wanting to try out some new skills, this might be perfect.
 
     h6 Ideas
     ul
-      li Contribute by submitting patches to GitHub
+      li Contribute by submitting patches to 
+        a(href="http://github.com/bhumphreys/kdict") GitHub
       li Support for definitions in multiple languages
       li Add internationalization support to KDict's site code
 
-  .span-one-third
+
+  .span6
+    h2 Korean-language tools
+    p The main benefit of open-source data is the ability to use it for any project you see fit. Why not be one of the firs to take advantage of this, and try making something?
+
+    h6 Ideas
+    ul
+      li A Korean-language version of 
+        a(href="http://www.polarcloud.com/rikaichan/") Rikaichan
+      li Desktop dictionary software like 
+        a(href="http://www.jedict.com/") JEDict
+      li Smartphone dictionary apps
+
+.row
+  .span6
     h2 Data cleanup
-    p Are you obsessive about formatting, cleanliness?
+    p Are you obsessive about well-formatted, regular data? You could help improve the quality of KDict data by writing tools to check for formatting or data errors errors
 
     h6 Ideas
     ul
       li Write Map-Reduce tasks to run over the database and highlight any anomalies
 
 
-  .span-one-third
-    h2 Korean-language tools
-    p
-
-    h6 Ideas
-    ul
-      li A Korean-language version of Rikaichan
-      li Desktop dictionary software like JEDict
-      li Smartphone dictionary apps
-
-.row
-  .span-one-third
-    h2 Natural Language Processing
+  .span6
+    h2 Natural language processing
     p If you have knowledge of natural language processing, why not have fun with a small project and help out KDict in the process?
     h6 Ideas
     ul
       li Verb stemmer - Take conjugated form "할 수 있어요" and return verb stem "하다"
       li Evaluate dictionary quality by comparing coverage against a large corpus
       li Find unknown words in corpora and add them to the dictionary
+
+  .span4
+     p (Image)
+
+.row
+  .span6
+    h2 New Languages
+    p KDict currently supports English definitions. However it would be great if definitions were available in other languages.
+
+    h6 Ideas
+    ul
+      li Write a tool to import Japanese definitions from the open-source 
+        a(href="http://www.csse.monash.edu.au/~jwb/cgi-bin/wwwjdic.cgi?1C") WWWJDIC

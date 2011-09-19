@@ -1,3 +1,5 @@
+include ../mixins
+
 .page-header
   h1 Search
 
@@ -23,18 +25,14 @@
               td
                 h3
                   a(href='/#{entry.korean.hangul}')= entry.korean.hangul
-                - if (entry.tags.length > 0)
-                  p
-                    img(src='/images/icons/flag_orange.gif')
-                    |  x
-                    #{entry.tags.length}
+                mixin tag_list(entry.tags)
               td
                 ol
-                  - each meaning, i in entry.meanings
+                  - each sense, i in entry.senses
                     li
-                      - if (meaning.hanja != '')
-                        span.hanja (#{meaning.hanja}) 
-                      span.english= meaning.definitions.english_all
+                      - if (sense.hanja != '')
+                        span.hanja (#{sense.hanja}) 
+                      span.english= sense.definitions.english_all
 
 - if (paginator.total_pages > 1)
   .row

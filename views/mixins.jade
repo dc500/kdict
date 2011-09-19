@@ -5,3 +5,11 @@ mixin username_with_score(user)
   - else
     a(href="/users/#{user.username}", class="#{user.level}") #{user.username}
 
+mixin tag_list(tags)
+  - if (tags.length > 0)
+    ul.unstyled
+      - each tag, i in tags
+        li
+          a(href='/?tag=#{tag.short}', rel="twipsy", title="#{tag.long}")
+            span(class="label #{tag.type}")= tag.short
+

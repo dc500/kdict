@@ -6,7 +6,7 @@ html
     -else
       title KDict
     // Temporary
-    link(rel='stylesheet', href='/stylesheets/bootstrap-1.2.0.min.css')
+    link(rel='stylesheet', href='/stylesheets/bootstrap-1.3.0.min.css')
     link(rel='stylesheet', href='/stylesheets/kdict.css')
     //link(rel='stylesheet', href='/stylesheets/style.css')
     //link(rel='stylesheet', href='/stylesheets/fonts.css')
@@ -18,6 +18,7 @@ html
     script(src='/javascripts/jquery.editable-set.js')
     script(src='/javascripts/korean.js')
     script(src='/javascripts/gui.js')
+    script(src='/javascripts/bootstrap-twipsy.js')
     //script(src='/javascripts/bootstrap.js')
 
   body
@@ -35,11 +36,9 @@ html
                 li
                   a(href='/contribute') How?
                 li
-                  a(href="/entries/new") Add entry
+                  a(href='/contribute/tagged') Tagged entries
                 li
                   a(href='/updates') Updates
-                li
-                  a(href='/contribute/flagged') Flagged entries
             li.dropdown
               a(href='#', class='dropdown-toggle') Developers
               ul.dropdown-menu

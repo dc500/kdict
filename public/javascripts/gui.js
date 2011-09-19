@@ -33,6 +33,13 @@ $(document).ready(function(){
       alert( 'Saved Successfully!' );
     }
   });
+
+  $(function () {
+    $("a[rel=twipsy]").twipsy({
+      live: true,
+      placement: 'right'
+    })
+  })
   
 
   $("a.show-change-raw").click(function(){

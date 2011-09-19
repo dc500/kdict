@@ -159,7 +159,7 @@ app.get '/404/?',                   static.notFound
 app.get '/data/:file(*)',           static.data
 app.get '/about/?',                 static.about
 app.get '/contribute/?',            static.contribute
-app.get '/contribute/flagged?',     static.flagged
+app.get '/contribute/tagged?',      static.tagged
 
 app.get '/developers/contribute/?', static.developers
 app.get '/developers/download/?',   static.download

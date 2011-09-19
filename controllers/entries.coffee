@@ -1,12 +1,18 @@
 mongoose = require('mongoose')
 Entry    = mongoose.model('Entry')
+Tag      = mongoose.model('Tag')
 korean   = require("../public/javascripts/korean.js")
+
+NotFound = (msg) ->
+  @name = "NotFound"
+  Error.call this, msg
+  Error.captureStackTrace this, arguments.callee
 
 exports.show = (req, res, next) ->
   console.log "Getting for " + req.params.word
     #keyval = generalString(req.params.word)
     #query[keyval[0]] = keyval[1]
-  Entry.findOne( { 'korean.hangul' : req.params.word } ).populate('updates').run (err, entry) ->
+  Entry.findOne( { 'korean.hangul' : req.params.word } ).populate('updates', ['created_at']).populate('tags').run (err, entry) ->
     return next(new NotFound("Entry not found")) unless entry
     console.log entry
     res.render 'entries/show', locals:
@@ -153,9 +159,11 @@ exports.search = (req, res, next) ->
       when "q"
         keyval = generalString(val)
         query[keyval[0]] = keyval[1]
-      when "flag"
-        re = new RegExp(val, "i")
-        query["flags"] = re
+      when "tag"
+        Tag.findOne( { short : val } ).run (err, tag) ->
+          if !query['tags']
+            query['tags'] = []
+          query["tags"].push(tag._id)
       when "pos"
         query["pos"] = val
       else
@@ -170,7 +178,7 @@ exports.search = (req, res, next) ->
     else
       paginator.setCount count
       console.log paginator
-      Entry.find(query).limit(paginator.limit).skip(paginator.skip).sort(order, 'ascending').run (err, entries) ->
+      Entry.find(query).populate('tags').limit(paginator.limit).skip(paginator.skip).sort(order, 'ascending').run (err, entries) ->
         if err
           console.log err
           next err
@@ -185,19 +193,19 @@ exports.search = (req, res, next) ->
               title: "'" + req.param("q") + "'"
 
 
-exports.listFlags = (callback) ->
-  Entry.distinct "flags", (err, results) ->
-    flags = {}
+exports.listTags = (callback) ->
+  Entry.distinct "tags", (err, results) ->
+    tags = {}
     for i of results
       elem = results[i]
       if elem instanceof Array
         for j of elem
           elem2 = elem[j]
-          flags[elem2] = 1
+          tags[elem2] = 1
       else
-        flags[elem] = 1
+        tags[elem] = 1
     keys = []
-    for i of flags
+    for i of tags
       keys.push i
     callback null, keys
 

@@ -8,8 +8,22 @@ require 'pp'
 #             This skips All the validation in the DB as it inserts directly
 #             and ignores all the magical Mongoose validation.
 
+
 module KDict
     class Migration
+
+        @@hanja_range = [
+            [ 0x4E00,  0x9FFF, 'hanja' ], # CJK Unified Ideographs
+            [ 0xF900, 0x2FA1F, 'hanja' ]  # Massive mess of CJK and other stuff
+        ]
+
+        @@hangul_range = [
+            [ 0x1100, 0x11FF, 'hangul' ], # Hangul Jamo	
+            [ 0x3130, 0x318F, 'hangul' ], # Hangul Compatibility Jamo	
+            [ 0xA960, 0xA97F, 'hangul' ], # Hangul Jamo Extended-A	
+            [ 0xAC00, 0xD7AF, 'hangul' ], # Hangul Syllables	
+            [ 0xD7B0, 0xD7FF, 'hangul' ], # Hangul Jamo Extended-B	
+        ]
 
         def initialize
             db = Mongo::Connection.new("localhost", 27017).db("kdict")
@@ -40,6 +54,81 @@ module KDict
               "email"        => 'migrate',
             })
 
+            # Set up all initial tags
+            @tags = db.collection("tags")
+            @tags.drop()
+            data = {
+                'english_see' => {
+                    "type"  => 'problem',
+                    "short" => 'English See',
+                    "long"  => 'English definition contains "see..." reference'
+                },
+                'hangul_undef' => {
+                    "type"  => 'problem',
+                    "short" => 'Hangul Undef',
+                    "long"  => 'Hangul is undefined.'
+                },
+                'english_undef' => {
+                    "type"  => 'problem',
+                    "short" => 'English Undef',
+                    "long"  => 'English is undefined.'
+                },
+                'korean_content' => {
+                    "type"  => 'problem',
+                    "short" => 'Hangul Content',
+                    "long"  => 'Hangul field contains non-hangul characters'
+                },
+                'non_hanja' => {
+                    "type"  => 'problem',
+                    "short" => 'Hanja Content',
+                    "long"  => 'Hanja field contains non-hanja characters'
+                },
+                'check_merge' => {
+                    "type"  => 'problem',
+                    "short" => 'Check Merge',
+                    "long"  => 'Check that meanings have been merged correctly. Identify any duplicate meanings and remove/merge them.'
+                },
+                'non-ascii' => {
+                    'type'  => 'problem',
+                    'short' => 'English Content',
+                    'long'  => 'English definition contains non-ascii characters.'
+                },
+                'english-parens' => {
+                    'type'  => 'problem',
+                    'short' => 'English Parens',
+                    'long'  => "English contains parenthesis, square brackets or braces. Check usage and clean up."
+                },
+                'da_not_verb' => {
+                    'type'  => 'problem',
+                    'short' => '다 Not VerbAdj',
+                    'long'  => "Word with 다 ending appears to not be a verb/adj. Check POS tag."
+                },
+                'english_acronym' => {
+                    'type'  => 'problem',
+                    'short' => 'English Acronym',
+                    'long'  => 'English definition appears to contain acronym. Confirm andexpand'
+                },
+                'english_backslashes' => {
+                    'type'  => 'problem',
+                    'short' => 'English Backslashes',
+                    'long'  => 'English contains backslashes, please clean up'
+                },
+                'unknown_pos' => {
+                    'type'  => 'problem',
+                    'short' => 'Unknown POS',
+                    'long'  => 'POS tag is unknown. Please check legacy POS information or choose from knowledge'
+                },
+                'link_error' => {
+                    'type'  => 'problem',
+                    'short' => 'Legacy Link Error',
+                    'long'  => "Old definition was 'see...' but could not find linked article"
+                }
+            }
+            @tag_refs = Hash.new
+            data.each_pair do |key, doc|
+                id = @tags.insert(doc)
+                @tag_refs[key] = id
+            end
 
             #@updates.create_index
 
@@ -67,7 +156,7 @@ module KDict
             # Start with largest DB
             cursor.each do |row|
                 count += 1
-                if count % 1000 == 0
+                if ((count % 1000) == 0)
                     puts "#{count} of #{total}"
                 end
 
@@ -91,19 +180,19 @@ module KDict
                     # Some words have whitespace on the end...
                     sub_cursor = resource.find( 'word' => /^\s*#{ row['word'] }\s*$/)
                         if sub_cursor.count > 1
-                            puts "\n\n"
-                            puts "Found multiple possibilities via def '#{ row['def'] }'"
-                            puts "Original: #{ row['word'] } (#{ row['wordid'] })"
-                            puts "Results found:"
+                            #puts "\n\n"
+                            #puts "Found multiple possibilities via def '#{ row['def'] }'"
+                            #puts "Original: #{ row['word'] } (#{ row['wordid'] })"
+                            #puts "Results found:"
                             sub_cursor.each do |meh|
-                                puts "\t#{meh['word']} - #{meh['def']} (#{ meh['wordid'] })"
-                                puts "\tFull: " + meh.inspect
+                                #puts "\t#{meh['word']} - #{meh['def']} (#{ meh['wordid'] })"
+                                #puts "\tFull: " + meh.inspect
                             end
                             #other = sub_cursor.next_document
                             #puts sub_cursor.count
-                            puts "\n\n"
+                            #puts "\n\n"
                         elsif sub_cursor.count == 0
-                            tags.push("Could not find linked article in '#{ row['def'] }'")
+                            tags.push(@tag_refs['link_error'])
                         end
 
 
@@ -116,17 +205,17 @@ module KDict
                 end
 
                 if (row['def'] =~ /^see /i)
-                    tags.push("English def is see")
+                    tags.push(@tag_refs['english_see'])
                     # Ideally we want to be able to link these
                 end
 
 
                 # if any required fields are empty, flip out
-                { 'def' => 'english',
-                  'word' => 'hangul'}.each_pair do |old, new|
-                    if (row[old].nil? or row[old] == "")
-                        tags.push("required field #{ new } empty")
-                    end
+                if (row['def'].nil? or row['def'] == "")
+                    tags.push(@tag_refs['english_undef'])
+                end
+                if (row['word'].nil? or row['word'] == "")
+                    tags.push(@tag_refs['hangul_undef'])
                 end
 
                 # m_korean always has uppercase first letters. It's annoying
@@ -137,7 +226,9 @@ module KDict
 
                 eng, en_tags = KDict::Migration.clean_english(row['def'])
                 if en_tags.size > 0
-                    tags.push(en_tags)
+                    en_tags.each do |tag_str|
+                        tags.push(@tag_refs[tag_str])
+                    end
                 end
                 output['definitions'] = Hash.new
                 output['definitions']['english'] = Array.new
@@ -146,7 +237,7 @@ module KDict
                 kor = Hash.new
                 kor['hangul'], tag  = KDict::Migration.clean_korean(row['word'])
                 if tag
-                    tags.push(tag)
+                    tags.push(@tag_refs[tag])
                 end
                 
                 # Saving the output for search usage
@@ -156,20 +247,22 @@ module KDict
 
                 if (collection.name != "p_korean")
                     hanja, tag  = KDict::Migration.clean_hanja(row['hanja'])
-                    output['hanja'] = [ hanja ]
+                    if (hanja != "")
+                        output['hanja'] = [ hanja ]
+                    end
                     if tag
-                        tags.push(tag)
+                        tags.push(@tag_refs[tag])
                     end
                 end
 
                 output['pos'], tag = KDict::Migration.clean_pos(row['pos'])
                 if tag
-                    tags.push(tag)
+                    tags.push(@tag_refs[tag])
                 end
                 if kor['hangul'] =~ /다\s*$/
                     if (output['pos'] !~ /^verb|adjective$/)
                         #puts "Output: " + kor['hangul'] + ' ' + output['pos']
-                        tags.push("Word with 다 ending appears to not be a verb/adj")
+                        tags.push(@tag_refs['da_not_verb'])
                     end
                 end
 
@@ -184,12 +277,13 @@ module KDict
                 #    puts row.inspect
                 #end
 
+                # TODO difficulty from 'level' tag
+                output['difficulty']
 
                 #output['submitter'] = 'Ruby migration tool'
                 # TODO Do we want to change the way tags are being handled?
                 #      Instead they could be set by running the Mongoose validation
                 #      on each record, via Javascript
-                output['tags'] = tags
 
                 output['legacy'] = Hash.new
                 output['legacy']['wordid']    = row['wordid']
@@ -199,39 +293,50 @@ module KDict
                 #output['created_at'] = Time.now;
                 #output['updated_at'] = Time.now;
 
-                # Write the data
-                # THIS IS WAY TOO SLOW
-                count = @entries.find( 'korean.hangul' => kor['hangul'] ).count
-                if count > 0
+                results_count = @entries.find( 'korean.hangul' => kor['hangul'] ).count
+                if results_count > 0
+                    # Write the data
+                    if tags.length > 0
+                        #puts kor['hangul']
+                        #puts tags.inspect
+                    end
                     #puts "Updating existing #{kor['hangul']}"
+                    tags.push(@tag_refs['check_merge'])
+
                     entry_id = @entries.update(
                         { 'korean.hangul' => kor['hangul'] }, 
                         {
-                            "$push" => { "meanings" => output }
+                            "$push" => { "senses" => output },
                         },
                         { :upsert => true }
                     )
+
+                    tags.each do |tag|
+                        @entries.update(
+                            { 'korean.hangul' => kor['hangul'] }, 
+                            { "$addToSet" => { "tags" => tag } },
+                        )
+                    end
                 else
                     #puts "New entry: #{kor['hangul']}"
                     entry_id = @entries.insert( 
                         {
                             'korean' => kor,
-                            'meanings' => [ output ],
+                            'senses' => [ output ],
+                            'tags' => tags,
                         }
                     )
                 end
 
-                # UPSERT SEEMS BROKEN
-
-                # We now do an upsert, not a plain insert
-                #entry_id = @entries.save(
-                #    { 'korean.hangul' => kor['hangul'] }, 
-                #    {
-                #        'korean' => kor,
-                #        "$push" => { "meanings" => output }
-                #    },
-                #    { :upsert => true }
-                #)
+                tags.each do |tag|
+                    if (tag == nil)
+                        puts kor['hangul']
+                        puts output.inspect
+                        puts tags.inspect
+                        puts tags.length
+                        exit 
+                    end
+                end
 
 
 
@@ -240,14 +345,12 @@ module KDict
                 update['entry']  = entry_id
                 update['after']  = output
                 update['type']   = 'new'
-                update['status'] = Hash.new
                 update['user']      = @user_id
-                update['revision_num'] = 1
                 update_id = @updates.insert( update )
                 
                 @entries.update(
                     { '_id' => entry_id },
-                    { "$push" => { 'update_ids' => update_id } },
+                    { "$push" => { 'updates' => update_id } },
                     { :upsert => true }
                 )
 
@@ -272,8 +375,8 @@ module KDict
             end
 
             # God knows what we have in here
-            if (clean =~ /[a-z]/i)
-                tag = 'Korean data contains alphabet characters'
+            if !all_something?(clean, @@hangul_range)
+                tag = 'korean_content'
             end
 
             # Some have \t or \r literals
@@ -310,7 +413,7 @@ module KDict
 
             # non-english content in english def
             if !clean.ascii_only?
-                tags.push 'Non-ascii in English def'
+                tags.push 'non-ascii'
             end
             
             # I don't think we should have plurals
@@ -355,12 +458,12 @@ module KDict
 
             # If we have weird parens
             if (clean =~ /[\[\]\{\}]/)
-                tags.push "English contains square brackets or braces"
+                tags.push 'english-parens'
             end
 
             # goddamn backslashes
             if (clean =~ /\\/)
-                tags.push 'English contains backslashes'
+                tags.push 'english_backslashes'
 
                 # First change \\011 which is a full-with space
                 clean.gsub!('\\\\011', ' ')
@@ -402,7 +505,7 @@ module KDict
 
             # Acronym probably
             if (clean =~ /^[A-Z0-9 ,']+$/)
-                tags.push 'English contains acronym?'
+                tags.push 'english_acronym'
             end
 
             # Want to make two instances of the word
@@ -443,14 +546,14 @@ module KDict
                 pos = 'adjective'
             when 5
                 pos = 'counter'
-            when 6
-                # ???
+            #when 6
+            #    # ???
             when 7, "지"
                 pos = 'location'
             when 9, "수"
                 pos = 'number'
-            when 10
-                tag = true
+            #when 10
+            #    tag = true
             when "대" # pronoun
                 pos = 'pronoun'
             when "감"
@@ -461,18 +564,15 @@ module KDict
                 pos = 'preposition'
             when "의" # posession?
                 pos = 'possession'
-                tag = 'possessive POS unsure'
-            when "도" 
-            when "보" # helping verb
-            when "불" # ??
-                tag = 'unknown POS tag'
-            when "형" # adj
-            when "curious" 
-                delete = true
+            #when "도" 
+            #when "보" # helping verb
+            #when "불" # ??
+            #when "형" # adj
+            #when "curious" 
             end
 
             if pos.nil?
-                tag = "unknown POS tag '#{ in_pos }'"
+                tag = 'unknown_pos'
             end
 
             return pos, tag
@@ -487,11 +587,35 @@ module KDict
 
             clean = kill_html(clean)
 
-            if (clean =~ /[a-z0-9 -,]/i)
-                tag = "Hanja contains alphanumeric"
+            if clean != "" && !all_something?(clean, @@hanja_range)
+                tag = "non_hanja"
+                #puts "#{clean} contains non-hanja!"
             end
 
             return clean, tag
+        end
+
+        def self.all_something?(string, range)
+            all_something = true
+            string.each_char do |c|
+                code = c.unpack('U*').first
+                #puts code
+                found = false
+                range.each do |start, finish|
+                    #puts start, finish
+                    if code >= start && code <= finish
+                        found = true
+                        break
+                    end
+                end
+
+                if !found
+                    all_hanja = false
+                    break
+                end
+            end
+
+            return all_something
         end
 
         # Hanja can be a clever mix of HTML with JS and HTML elements within the JS
@@ -510,5 +634,13 @@ if ARGV[0] == 'go'
 
     migrate = KDict::Migration.new()
     migrate.import_all()
+else
+    puts "WARNING: This tool will drop any existing collections in the db 'kdict' called:"
+    puts " - entries"
+    puts " - updates"
+    puts " - users"
+    puts " - tags"
+    puts "Run with 'ruby migrate.rb go'"
+    puts "(requires Ruby >= 1.9.2)"
 end
 
