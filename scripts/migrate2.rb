@@ -51,6 +51,13 @@ module KDict
             @korean_english.ensure_index([
                 ['word', Mongo::ASCENDING],
             ])
+            @korean_english.ensure_index([
+                ['def', Mongo::ASCENDING],
+            ])
+            @korean_english.create_index([
+                ['word', Mongo::ASCENDING],
+                ['def',  Mongo::ASCENDING],
+            ])
             @m_korean.ensure_index([
                 ['word', Mongo::ASCENDING],
             ])
@@ -179,11 +186,11 @@ module KDict
             # Start with largest DB
             cursor.each do |row|
                 count += 1
-                #if (count < 83000)
-                #    next
+                if (count < 80000)
+                    next
                 #elsif (count > 83200)
                 #    exit
-                #end
+                end
 
                 if ((count % 1000) == 0)
                     puts "#{count} of #{total}"
@@ -197,39 +204,24 @@ module KDict
                 end
 
 
-                res_cursor = @entries.find( 'korean.hangul' => kor['hangul'] )
+                # find existing entries of the same name
+                existing_cursor = @entries.find( 'korean.hangul' => kor['hangul'] )
                 is_update = false
-                if res_cursor.count > 1
-                    exit "WHOA"
-                elsif res_cursor.count > 0
-                    res_cursor = res_cursor.first
+                if existing_cursor.count > 1
+                    puts "We should never have more than 1 entry with the same hangul. Somethin has gone wrong."
+                    exit
+
+                # So there's an existing entry
+                # If there is, we'll merge the new senses with those existing
+                elsif existing_cursor.count == 1
+                    existing_cursor = existing_cursor.first
                     is_update = true
 
-                    entry_id = res_cursor['_id']
+                    entry_id = existing_cursor['_id']
 
-                    # Write the data
                     tags.push(@tag_refs['check_merge'])
 
-                    #puts "Update: #{kor['hangul']},\t#{senses.length} senses"
-
-                    # See if the existing entry contains a meaning with a wordid that we've already seen
-                    die = false
-                    senses.each do |sense|
-                        dup_cursor = @entries.find( { 'korean.hangul'        => kor['hangul'],
-                                                      'senses.legacy.wordid' => sense['legacy']['wordid'] } )
-                        if dup_cursor.count > 0
-                            die = dup_cursor
-                        end
-                    end
-
-                    if die
-                        puts "####################### #{senses.first['legacy']['wordid']}"
-                        puts "Found a duplicate word that we're trying to insert"
-                        puts senses.inspect
-                        puts res_cursor.inspect
-                        puts die.first.inspect
-                        next
-                    end
+                    _puts "Update: #{kor['hangul']},\t#{senses.length} senses"
 
                     updated_entry = @entries.update(
                         { 'korean.hangul' => kor['hangul'] }, 
@@ -244,8 +236,8 @@ module KDict
                         )
                     end
 
+                # New entry, insert it on its own
                 else
-                    #puts "Insert: #{kor['hangul']},\t#{senses.length} senses"
                     entry_id = @entries.insert( {
                         'korean' => kor,
                         'senses' => senses,
@@ -253,19 +245,7 @@ module KDict
                     } )
                 end
 
-                tags.each do |tag|
-                    if (tag == nil)
-                        puts kor['hangul']
-                        puts senses.inspect
-                        puts tags.inspect
-                        puts tags.length
-                        exit 
-                    end
-                end
 
-
-
-                # TODO: "Update" entries
                 update = Hash.new
                 update['entry']  = entry_id
                 if !is_update
@@ -290,13 +270,13 @@ module KDict
 
 
 
+        # Can return multiple entries
         def parse_clean_entry(collection, row)
-            # Can return multiple entries
 
             tags = Array.new()
 
             kor = Hash.new
-            kor['hangul'], tag  = KDict::Migration.clean_korean(row['word'])
+            kor['hangul'], tag  = KDict::Migration.clean_hangul(row['word'])
             if tag
                 tags.push(@tag_refs[tag])
             end
@@ -306,24 +286,52 @@ module KDict
 
             # Now that we're inserting multiple stuff, this shouldn't be a problem
             if (row['def'] == "see 6000") || (row['def'] == "see gsso")
-                resource = nil
-                # skip the current record
+
+                # All we have to go on to link entries is their Hangul
+                # So it's extremely likely we'll get multiple senses from a
+                # single "see ___" entry
+                # With the new 'sense' data structure this isn't a problem, but
+                # we still want to differentiate these at a later date so we
+                # can tie the example sentences to the right sense, which will
+                # be based on the word ID of the thing that referenced it
+                #
+                # Still with me?  Didn't think so.
+                #
+                # Oh also, we don't want to add the same sense multiple times
+                # Which is extremely likely to happen, as we not only parse the
+                # talbe that contains the refererences (korean_english), but also
+                # the tables that it references, because it misses a couple of
+                # thousand definitions.
+                # Wonderful.
+
+                see_coll = nil
+
                 if (row['def'] == "see 6000")
                     if (collection.name == 'm_korean')
                         _puts "Self-referential?"
                         _puts row.inspect
                         return nil, nil, nil
                     end
-                    resource = @m_korean
+                    see_coll = @m_korean
                     #row['table'] = 'm_korean'
                 else (row['def'] == "see gsso")
-                    resource = @gsso_korean
+                    see_coll = @gsso_korean
                     #row['table'] = 'gsso_korean'
                 end
 
                 # Some words have whitespace on the end...
-                sub_cursor = resource.find( 'word' => /^\s*#{ row['word'] }\s*$/)
+                sub_cursor = see_coll.find( 'word' => /^\s*#{ row['word'] }\s*$/)
                 senses = Array.new()
+
+                # Want a list of all wordids in the original that contained "see___"
+                all_see = collection.find( { 'word' => /^\s*#{ row['word'] }\s*$/,
+                                             'def'  => /^\s*see (6000|gsso)/i },
+                                           { :fields => [ 'wordid' ] } )
+                see_wordids = Array.new
+                all_see.each do |moo|
+                    see_wordids.push(moo['wordid'])
+                end
+                puts "#{row['word']} " + see_wordids.inspect
 
                 if sub_cursor.count >= 1
                     tags.push(@tag_refs['check_merge'])
@@ -339,7 +347,7 @@ module KDict
                         _puts row.inspect
                         _puts sub_row.inspect
                         _puts "\n"
-                        sub_kor, sub_senses, sub_tags = parse_clean_entry(resource, sub_row)
+                        sub_kor, sub_senses, sub_tags = parse_clean_entry(see_coll, sub_row)
                         if sub_senses.length > 1
                             _puts "WARNING:"
                             _puts sub_kor.inspect
@@ -348,7 +356,7 @@ module KDict
                             exit "Sub_senses really shouldn't have more than one result."
                         end
                         # Stuffing this in because it might be useful later
-                        sub_senses[0]['legacy']['see_wordid'] = row['wordid']
+                        sub_senses[0]['legacy']['see_wordid'] = see_wordids #row['wordid']
                         if sub_kor['hangul'] != kor['hangul']
                             _puts "We have a serious problem, main hangul #{kor['hangul']} does not match sub korean #{sub_kor['hangul']}"
                         end
@@ -484,7 +492,7 @@ module KDict
             return done
         end
 
-        def self.clean_korean(raw)
+        def self.clean_hangul(raw)
             tag = false
             if (raw.class == Fixnum)
                 clean = raw.to_s
@@ -763,4 +771,5 @@ else
     puts "Run with 'ruby migrate.rb go'"
     puts "(requires Ruby >= 1.9.2)"
 end
+
 
