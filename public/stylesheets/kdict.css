@@ -15,8 +15,12 @@ ul.flag {
     color: #999;
 }
 
+td.defn {
+    width: 140px;
+}
 
 .label.problem { background-color:#f89406; }
+.label.user    { background-color:#62cffc; }
 
 .topbar {
     position: relative;

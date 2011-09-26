@@ -1,11 +1,61 @@
-.page-header
-  h1= title
+include ../mixins
 
-p The following are flags in the database. Choose one to see items marked with it.
+.hero-unit
+  h1 Tags
 
-ul
-  - each flag in flags
-    li
-      a(href="/?flag=#{flag}")= flag
+.row
+  .span16
+    .page-header
+      h1= title
+.row
+  .span8
+    p It's possible to add tags to dictionary entries to alert others
+
+  .span8
+    h3 How?
+    p The functionality is currently disabled.
+
+.row
+  .span4
+    h3 Problems
+      small
+        span.problem.label Problems
+
+    p Dictionary entries that appear to have problems are marked with orange tags 
+      span.label.problem Like this
+    p You can see a more detailed description of the problem by hovering over the tag.
+    p These tags are there to highlight which dictionary entries need attention.
+    p Please help out by editing these entries so their problems are resolved.
+
+  // List of problems
+  .span12
+    h4 Existing tags
+    p Click to find tagged entries.
+    table.zebra-striped
+      thead
+        tr
+          th Tag
+          th Definition
+      tbody
+        - each tag in problem_tags
+          tr
+            td
+              mixin tag_nohover(tag)
+            td= tag.long
+
+
+    span.label.problem !hangul
+    span.label.problem !hangul_content
+    span.label.problem !acronym
+    span.label.problem !pos
+
+    //mixin tag_list(problem_tags)
+
+
+.row
+  .span6
+    h3 User Tags
+      small
+        span.label.info Information
 
 

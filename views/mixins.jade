@@ -5,11 +5,46 @@ mixin username_with_score(user)
   - else
     a(href="/users/#{user.username}", class="#{user.level}") #{user.username}
 
+mixin tag(tag)
+  a(href='/?tag=#{tag.short}', rel="twipsy", title="#{tag.long}")
+    span(class="label #{tag.type}")= tag.short
+
+mixin tag_nohover(tag)
+  a(href='/?tag=#{tag.short}')
+    span(class="label #{tag.type}")= tag.short
+
 mixin tag_list(tags)
   - if (tags.length > 0)
     ul.unstyled
       - each tag, i in tags
         li
-          a(href='/?tag=#{tag.short}', rel="twipsy", title="#{tag.long}")
-            span(class="label #{tag.type}")= tag.short
+          mixin tag(tag)
 
+mixin paginator(paginator)
+  - if (paginator.total_pages > 1)
+    .row
+      .span12.offset4
+        .pagination
+          ul
+            - if (paginator.prev_page_url)
+              li.prev
+                a(href="#{paginator.prev_page_url}") &larr; Previous
+            - else
+              li.prev.disabled
+                a(href="#") &larr; Previous
+            //a(href="/?q=#{results.query}") First
+            - for (var i = paginator.min_page; i < paginator.max_page; i++)
+              - if (i == paginator.page)
+                li.active
+                  a(href="#") #{i}
+              - else
+                li
+                  a(href="#{paginator.getPgUrl(i)}")= i
+            - if (paginator.next_page_url)
+              li.next
+                a(href="#{paginator.next_page_url}") Next &rarr;
+            - else
+              li.next.disabled
+                a(href="#") Next &rarr;
+              //a(href="/?q=#{results.query}&pg=#{results.total_pages}") #{results.total_pages} Last
+    

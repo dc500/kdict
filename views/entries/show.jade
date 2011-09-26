@@ -8,12 +8,12 @@ script
     }
   });
 
-.editable
-  .page-header
-    h1
-      span(data-name='entry[korean][hangul]')= entry.korean.hangul
-  
-  .row
+.page-header
+  h1
+    span(data-name='entry[korean][hangul]')= entry.korean.hangul
+
+.row
+  .editable
     .span3
       h2 Summary
 
@@ -24,7 +24,16 @@ script
           li
             - if (sense.hanja != '')
               span.hanja (#{sense.hanja}) 
-            span.english= sense.definitions.english_all
+            a(href='\##{i}')
+              span.english= sense.definitions.english_all
+
+      h6 Pronunciation
+      dl
+        dt Hangul
+        dd= entry.korean.hangul
+      dl
+        dt Others
+        dd Coming soon
 
     .span5
       p
@@ -41,53 +50,71 @@ script
             input(type="text", name="q", id="search")
   
         button(type="submit", class="btn primary") Search
-  
-  
-  .row
-    .span3
-      h3 Examples
-  
-    .span6
-      h6
-        a(href="http://tatoeba.org/eng/sentences/search?query=#{entry.korean.hangul}&from=kor") Search for examples on Tatoeba.org
-  
-  
-  
-  
-  .row
-    .span3
-      h3 Revisions
-      p entry history of changes made
-  
-    .span13
+
+.row
+  .span4
+    h2 Details
+
+- each sense, i in entry.senses
+  .row(id="#{i}"
+    .span4
+      h4 #{entry.korean.hangul}
+        sup #{i}
+
+    .span8
+      - if (sense.hanja != '')
+        span.hanja (#{sense.hanja}) 
+      
       ul
-      - each update in entry.updates
-        li (#{update.created_at}) 
-          a(href="/updates/#{update._id}")= update._id
+        - each word in sense.definitions.english
+          li= word
+
   
-  .row
-    .span3
-      h3 Internal
-      p This information is useful for developers
+.row
+  .span3
+    h3 Examples
 
-    .span3
-      h3 Tags
-      mixin tag_list(entry.tags)
+  .span6
+    h6
+      a(href="http://tatoeba.org/eng/sentences/search?query=#{entry.korean.hangul}&from=kor") Search for examples on Tatoeba.org
 
-  .row
-    .span9.offset3
-      - each sense in entry.senses
-        dl
-          dt Internal ID
-          dd= sense._id
-        dl
-          dt Submitter
-          dd= sense.legacy.submitter
-        dl
-          dt WordID
-          dd= sense.legacy.wordid
-        dl
-          dt Table
-          dd= sense.legacy.table
+
+
+
+.row
+  .span3
+    h3 Revisions
+    p entry history of changes made
+
+  .span13
+    ul
+    - each update in entry.updates
+      li (#{update.created_at}) 
+        a(href="/updates/#{update._id}")= update._id
+
+.row
+  .span3
+    h3 Internal
+    p This information is useful for developers
+
+  .span3
+    h3 Tags
+    mixin tag_list(entry.tags)
+
+.row
+  .span9.offset3
+    - each sense in entry.senses
+      dl
+        dt Internal ID
+        dd= sense._id
+      dl
+        dt Submitter
+        dd= sense.legacy.submitter
+      dl
+        dt WordID
+        dd= sense.legacy.wordid
+      dl
+        dt Table
+        dd= sense.legacy.table
   
 

@@ -14,6 +14,24 @@ function updateDetectedLang() {
   $("li#" + type).addClass('selected');
 }
 
+function renderSearchOptions(options) {
+    var output = [];
+    var raw = [];
+    for (i in options) {
+        var option = options[i];
+        if (option.type == 'tag') {
+            output.push("<span class='label " + option.subtype + "'>" + option.content + "</span>");
+            //output.push("<input name='tag' value='" + option.content + "' type='hidden'/>");
+        } else {
+            output.push("<span>" + option.content + "</span>");
+            raw.push( option.content );
+        }
+    }
+    //output.push("<input name='q' value='" + raw.join(' ') + "' type='hidden'/>");
+
+    $('#search_parts').html(output.join(' '));
+};
+
 $(document).ready(function(){
 
   $("ul#lang-select a").click(function() {
@@ -21,10 +39,23 @@ $(document).ready(function(){
     this.parent().addClass('selected');
   });
 
-  $("#search").keyup( updateDetectedLang );
+  $("#search").keyup(parseSearch);
+
+  // Javascript is loaded, so we can change the name tag to something else
+  // And rely on Javascript to parse the content
+  /*
+  $("#search").attr('name', 'raw_q');
+  $("#searchform").submit(function() {
+      if ($(this).children('#search').val().match(/^\s*$/) {
+          return false;
+      }
+      $(this).children('#search').remove();
+  });
+  */
 
   $("#search").focus();
-  updateDetectedLang();
+  parseSearch();
+  //updateDetectedLang();
 
   $('tr.editable').editableSet({
     action: '/customer/1',

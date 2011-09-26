@@ -1,7 +1,11 @@
 mongoose = require('mongoose')
+url      = require('url') # for pagination
+qs       = require('querystring')
 Entry    = mongoose.model('Entry')
 Tag      = mongoose.model('Tag')
-korean   = require("../public/javascripts/korean.js")
+Korean   = require("../public/javascripts/korean.js")
+Search   = require("../public/javascripts/search.js")
+async    = require('async')
 
 NotFound = (msg) ->
   @name = "NotFound"
@@ -107,11 +111,13 @@ exports.paginatedQuery = (object, name, query, populate, order, page, per_page, 
 ###
 
 class Paginator
-  constructor: (query) ->
+  constructor: (req) ->
+    query = req.query
+
+    @raw = query
     @range = 5
     page = parseInt(query['pg'])
-    if isNaN(page)
-        page <= 1
+    if isNaN(page) || page < 1
       page = 1
     @page = page
 
@@ -131,6 +137,23 @@ class Paginator
     else
       @min_page = @page - @range
 
+    parts = url.parse req.url, true
+    delete parts.search
+    @raw_parts = parts
+
+
+    if (@page - 1 >= @min_page)
+      parts.query['pg'] = @page - 1
+      @prev_page_url = url.format(parts)
+
+    if (@page + 1 <= @max_page)
+      parts.query['pg'] = @page + 1
+      @next_page_url = url.format(parts)
+
+  getPgUrl: (pg) ->
+    @raw_parts.query['pg'] = pg
+    return url.format(@raw_parts)
+
   setCount: (count) ->
     @count = count
     @total_pages = Math.ceil(@count / @per_page)
@@ -143,54 +166,137 @@ class Paginator
       max_range = @count
     @range_str = (@skip + 1) + "-" + max_range
 
-  #limit: ->
-  #  @per_page
-  #skip: ->
-  #  (@page - 1) * @per_page
-  #range_str: ->
-  #  (@skip + 1) + "-" + (@skip + @per_page)
+Object.extend = (destination, source) ->
+  for property of source
+    if source.hasOwnProperty(property)
+      destination[property] = source[property];
+  return destination;
+
+# exporting to test
+parseQ = (text, next) ->
+  next() if not text or text.match /^\s*$/
+
+  words = text.split(" ")
+  async.map words, parseWord, (err, results) ->
+    
+    console.log results
+    next(results)
+    
+parseWord = (word, next) ->
+  console.log "Checking " + word
+
+  switch word.charAt(0)
+    when '!', '#'
+      parseTag word, next
+    when '.'
+      parsePOS word, next
+    else
+      parseText word, next
+
+
+parseTag = (word, next) ->
+  short = word.substr(1, word.length - 1)
+  switch word.charAt(0)
+    when '!' then type = 'problem'
+    when '#' then type = 'user'
+
+  Tag.findOne { 'short' : short, 'type' : type }, (err, tag) ->
+    next err unless tag
+    next( null, { 'tags' : tag._id } )
+
+parsePOS = (word, next) ->
+  without_dot = word.substr(1, word.length - 1)
+  next( null, { 'senses.pos' : without_dot } )
+
+parseText = (word, next) ->
+  val = new RegExp(word, 'i')
+  switch Korean.detect_characters(word)
+    when 'hangul'
+      next(null, { 'korean.hangul' : val })
+    when 'english'
+      next(null, { 'senses.definitions.english' : val })
+    when 'hanja'
+      next(null, { 'senses.hanja' : val })
+
+parseParams = (pair, next) ->
+  key = pair[0]
+  val = pair[1]
+  switch key
+    when "q"
+      console.log "Parsing"
+      parseQ val, (results) ->
+        console.log "Keyval q outer results: "
+        console.log results
+        # Race conditions? 
+        query = {}
+        for i, keyval of results
+          query = Object.extend(query, keyval)
+        console.log "Inner query: "
+        console.log query
+        next(null, query)
+
+    when "tag" then parseTag( val, next )
+    when "pos" then parsePOS( val, next )
+
+    else
+      console.log "Unknown key, not going to be processing this"
+      next
 
 exports.search = (req, res, next) ->
   query = {}
+  pairs = []
   for key of req.query
-    val = req.query[key]
-    console.log "key: " + key + ", val: " + val
-    switch key
-      when "q"
-        keyval = generalString(val)
-        query[keyval[0]] = keyval[1]
-      when "tag"
-        Tag.findOne( { short : val } ).run (err, tag) ->
-          if !query['tags']
-            query['tags'] = []
-          query["tags"].push(tag._id)
-      when "pos"
-        query["pos"] = val
-      else
-        console.log "Unknown key, not going to be processing this"
+    pairs.push( [ key, req.query[key] ] )
 
-  paginator = new Paginator req.query
-  order = "korean.length"
-  Entry.count(query).limit(paginator.limit).skip(paginator.skip).sort(order, 'ascending').run (err, count) ->
-    if err
-      console.log err
-      next err
-    else
-      paginator.setCount count
-      console.log paginator
-      Entry.find(query).populate('tags').limit(paginator.limit).skip(paginator.skip).sort(order, 'ascending').run (err, entries) ->
-        if err
-          console.log err
-          next err
-        else
-          console.log paginator
-          console.log entries
-          res.render "entries/search",
-            locals:
-              entries:   entries
-              paginator: paginator
-              q: req.param("q")
-              title: "'" + req.param("q") + "'"
+  async.map pairs, parseParams, (err, results) ->
+    console.log ""
+    console.log "Result parts:"
+    console.log results
+    query = {}
+# { $or : [ { 'senses.definitions.english' : /a/i, 'senses.definitions.english' : /hello/i } ] }
+    # { x : { $in : [ a, b ] } }
+    for i of results
+      console.log i
+      console.log results[i]
+      for key of results[i]
+        console.log key
+        val = results[i][key]
+        console.log "Key: " + key
+        console.log "Val: " + val
+        # Need to do an OR thing
+        if query[key]
+          console.log query[key]
+          console.log query[key][1]
+          existing = query[key][1]
+          existing = Object.extend(existing, val)
+        query = Object.extend(query, { '$in' : existing })
+
+    console.log ""
+    console.log "Query:"
+    console.log query
+    console.log ""
+  
+    paginator = new Paginator req
+    order = "korean.length"
+    Entry.count(query).limit(paginator.limit).skip(paginator.skip).sort(order, 'ascending').run (err, count) ->
+      if err
+        console.log err
+        next err
+      else
+        paginator.setCount count
+        Entry.find(query).populate('tags').limit(paginator.limit).skip(paginator.skip).sort(order, 'ascending').run (err, entries) ->
+          if err
+            console.log err
+            next err
+          else
+            console.log paginator
+            console.log entries.size
+            res.render "entries/search",
+              locals:
+                entries:   entries
+                paginator: paginator
+                q: req.param("q")
+                title: "'" + req.param("q") + "'"
 
 
 exports.listTags = (callback) ->
@@ -208,17 +314,6 @@ exports.listTags = (callback) ->
     for i of tags
       keys.push i
     callback null, keys
-
-
-generalString = (query) ->
-  val = new RegExp(query, 'i')
-  switch korean.detect_characters(query)
-    when 'hangul'  then key = 'korean.hangul'
-    when 'english' then key = 'meanings.definitions.english'
-    when 'hanja'   then key = 'meanings.hanja'
-  return [key, val]
-
-
 
 #exports.SearchProvider = SearchProvider
 
@@ -295,7 +390,6 @@ exports.delete = (req, res, next) ->
           req.flash "info", "entry deleted"
           res.redirect "/"
 
-
-
 exports.batchEdit = (req, res, next) ->
   console.log "Batch edit, baby"
+

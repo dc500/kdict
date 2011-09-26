@@ -10,7 +10,9 @@
   li#phonetic
     a(href='#') /phonetic/
 #searchbox
-  form( method='get', action='/' )
+  form( method='get', action='/', id="searchform" )
     input(type='text', name='q', id='search', class='search', value=q || '', placeholder="Search")
     span.help-block Type in English, 한글, 漢字, then hit Enter
+    #search_parts
     //input(type='submit', class='btn search-btn', value='Q')
+

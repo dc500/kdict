@@ -5,6 +5,7 @@ mongoose = require('mongoose')
 Entry    = mongoose.model('Entry')
 Update   = mongoose.model('Update')
 User     = mongoose.model('User')
+Tag      = mongoose.model('Tag')
 
 
 exports.notFound = (req, res) ->
@@ -40,9 +41,10 @@ exports.contribute = (req, res) ->
   res.render "contribute", title: "Contribute"
 
 exports.tagged = (req, res) ->
-  searchProvider.getTags (error, tags) ->
+  Tag.find( { type : 'problem' } ).run (err, problem_tags) ->
+    return next(err) if err
     res.render "contribute/tagged",
-      tags: tags
+      problem_tags: problem_tags
       title: "Tagged Entries"
 
 exports.developers = (req, res) ->

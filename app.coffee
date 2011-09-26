@@ -8,14 +8,18 @@ mongoStore     = require("connect-mongodb")
 connectTimeout = require("connect-timeout")
 sys            = require("sys")
 path           = require("path")
-models         = require("./models")
 fs             = require("fs")
 less           = require("less")
 
+entry          = require("./models/entry")
+update         = require("./models/update")
+tag            = require("./models/tag")
+user           = require("./models/user")
 
-User   = null
-Update = null
-Entry  = null
+#User   = null
+#Update = null
+#Entry  = null
+#Tag    = null
 
 hash = (msg, key) ->
   crypto.createHmac("sha256", key).update(msg).digest "hex"
@@ -121,16 +125,26 @@ app.configure "test", ->
     dumpExceptions: true
     showStack: true
   )
-  db = mongoose.connect("mongodb://localhost/nodepad-test")
 
 
 
+entry.defineModel mongoose, ->
+  console.log("Defining entry")
+  update.defineModel mongoose, ->
+    console.log("Defining update")
+    tag.defineModel mongoose, ->
+      console.log("Defining tag")
+      user.defineModel mongoose, ->
+        console.log("Defining user")
+        db = mongoose.connect(app.set("db-uri"))
+
+###
 models.defineModels mongoose, ->
   console.log("Defining models")
   app.Entry  = Entry  = mongoose.model("Entry")
   app.Update = Update = mongoose.model("Update")
   app.User   = User   = mongoose.model("User")
-  db = mongoose.connect(app.set("db-uri"))
+###
   
 
 app.error (err, req, res, next) ->
