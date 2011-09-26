@@ -16,7 +16,7 @@ Here's how to get a local copy of KDict running for development purposes:
 2. Install [NPM](http://npmjs.org/)
 3. Install the required packages
 4. Install [MongoDB](http://www.mongodb.org/)
-5. Download the [latest data dump](http://kdict.org/developers/download) and import using [```mongoimport```](http://www.mongodb.org/display/DOCS/Import+Export+Tools#ImportExportTools-mongoimport)
+5. Download the [latest data dump](http://kdict.org/developers/download) and import into a db/collection called ``kdict``/``entries`` using [```mongoimport```](http://www.mongodb.org/display/DOCS/Import+Export+Tools#ImportExportTools-mongoimport)
 6. Start an instance of the MongoDB server ```mongod```
 7. Start KDict server with ```coffee app.coffee```
 8. View the site at http://localhost:3000
