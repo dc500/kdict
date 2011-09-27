@@ -1,35 +1,78 @@
 // Used for editing and creation
-div.clearfix
-  label(for='entry[korean]') Korean
-  div.input
-    input(name='entry[korean]', value=entry.korean.hangul || '')
+.row
+  .span3
+    h3 Korean
+  .span12
+    input(name='entry[korean][hangul]', value=entry.korean.hangul || '')
     span.help-inline Must be in hangul 한글
 
-// AJAX: Show existing related entries
+.row
+  .span3
+    h3 Senses
+    p Hover over ? marks for field information.
 
-div.clearfix
-  label(for='entry[hanja]') Hanja
-  div.input
-    input(name='entry[hanja]', value=entry.hanja || '')
-    span.help-inline Optional
+  .span12
+    table.zebra-striped
+      thead
+        th Hanja 
+          a(href="#", rel='popover', data-original-title='Hanja', data-content='Optional. Must contain only chinese characters. Separate alternative characters semi-colons. Example: "國; 国"') ?
+        th English 
+          a(href="#", rel='popover', data-original-title='English', data-content='Required. Must contain only alphabet characters, numbers and punctuation. Separate alternative definitions of the same sense with semi-colons. Example: "bacon; ham; gammon"') ?
+        th POS 
+          a(href="#", rel='popover', data-original-title='Part of Speech', data-content='Optional. Select from the drop-down menu.') ?
+        th Del 
+          a(href="#", rel='popover', data-original-title='Delete', data-content='Delete the word sense. Useful when merging identical word senses.') ?
+      input(type="hidden", name="count", value="#{entry.senses.length}", id="count")
+      tbody(id="senses_tbody")
+        - each sense, i in entry.senses
+          //tr
+            td
+              input.span2(name='entry[hanjas][]', value=sense.hanja_all || '')
+            td
+              input.span7(name='entry[englishes][]', value=sense.definitions.english_all || '')
+            td
+              select.span2(name="entry[poses][]")
+                option(value="") - Unknown -
+                - each pos in all_pos
+                  - if (pos == sense.pos)
+                    option(value=pos, selected='yes')= pos
+                  - else
+                    option(value=pos)= pos
+            td
+              a.btn.danger.small.delete_sense(href="#") X
+          tr
+            td
+              input.span2(name='entry[senses][#{i}][hanja_all]', value=sense.hanja_all || '')
+            td
+              input.span6(name='entry[senses][#{i}][definitions][english_all]', value=sense.definitions.english_all || '')
+            td
+              select.span2(name="entry[senses][#{i}][pos]")
+                option(value="") - Unknown -
+                - each pos in all_pos
+                  - if (pos == sense.pos)
+                    option(value=pos, selected='yes')= pos
+                  - else
+                    option(value=pos)= pos
+            td
+              a.btn.danger.small.delete_sense(href="#") &ndash;
 
-div.clearfix
-  label(for='entry[english]') English
-  div.input
-    textarea.xxlarge(name='entry[english]', value=entry.definitions.english_all || '')
-    span.help-block Must only contain alphabet characters, numbers and punctuation. Separate multiple definitions with colons
+    a.btn.success.add_sense(href="#") Add sense
+
+//.alert-message.block-message.warning
+  a.close(href='#') ×
+  p
+    strong Holy guacamole! This is a warning!
+  | Best check yo self, you’re not looking too good. Nulla vitae elit libero, a pharetra augue. Praesent commodo cursus magna, vel scelerisque nisl consectetur et.
+  .alert-actions
+    a.btn.small.danger(href="#") Delete
+    | 
+    a.btn.small(href="#") Cancel
+    
+
+  
 
 
-//p Part of speech:
-// p POS: #{entry.pos}
-//  select(name="entry[pos]")
-//    option(value="") -- Unknown --
-//    option(value="noun") Noun
-//    option(value="verb") Verb
-//    option(value="adjective") Adjective
-
-
-- if (create != true)
+//- if (create != true)
   h3 Flags
   - if (entry.flags.length != 0)
     ul

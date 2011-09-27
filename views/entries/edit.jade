@@ -1,9 +1,16 @@
-h2 Edit Entry
-p
-  a.button(href='/')
-    &larr; Back to search
-form(method='post', action='/entries/' + entry.id)
+.page-header
+  h1 Edit Entry
+    div(style='float: right;')
+      a.btn.small(href='/entries/#{entry.id}') &larr; Back to Entry
+
+form(method='POST', action='/entries/#{entry.id}/edit')
   input(name='entry[id]', value=entry.id, type='hidden')
   input(name='_method', value='PUT', type='hidden')
   !=partial('fields', { locals: { entry: entry } })
+  div.actions
+    input(type='submit', value='Update', class="btn primary large")
+    | 
+    a(href='/entries/#{entry.id}', class="btn") Cancel
+    | 
+    button(class="btn danger small") Delete Entry...
 

@@ -39,7 +39,8 @@ $(document).ready(function(){
     this.parent().addClass('selected');
   });
 
-  $("#search").keyup(parseSearch);
+  //
+  //$("#search").keyup(parseSearch);
 
   // Javascript is loaded, so we can change the name tag to something else
   // And rely on Javascript to parse the content
@@ -54,10 +55,10 @@ $(document).ready(function(){
   */
 
   $("#search").focus();
-  parseSearch();
+  //parseSearch();
   //updateDetectedLang();
 
-  $('tr.editable').editableSet({
+  $('.editable').editableSet({
     action: '/customer/1',
     dataType: 'json',
     afterSave: function() {
@@ -65,13 +66,36 @@ $(document).ready(function(){
     }
   });
 
-  $(function () {
-    $("a[rel=twipsy]").twipsy({
-      live: true,
-      placement: 'right'
-    })
-  })
-  
+  $('#topbar').dropdown();
+
+  $("a[rel=twipsy]").twipsy({
+    live: true,
+    placement: 'right'
+  });
+
+  $("a[rel=popover]").popover({
+    live: true,
+    placement: 'below'
+  });
+
+  // How do I tie these together?
+  $("a.add_sense").click(function(){
+    // Hacky
+    var count = parseInt($("#count").val());
+    alert(count);
+    $("tbody#senses_tbody").append('<tr><td><input name="entry[senses][' + count + '][hanja_all]" value="" class="span2"/></td><td><input name="entry[senses][' + count + '][definitions][english_all]" value="" class="span6"/></td><td><select name="entry[senses][' + count + '][pos]" class="span2"><option value="">- Unknown -</option><option value="noun">noun</option><option value="verb">verb</option></select></td><td><a href="#" class="btn danger small delete_sense">&ndash;</a></td></tr>');
+    //$("tbody#senses_tbody").append('<tr><td><input name="entry[hanjas][]" value="" class="span2"/></td><td><input name="entry[englishes][]" value="" class="span7"/></td><td><select name="entry[poses][]" class="span2"><option value="">- Unknown -</option><option value="noun">noun</option><option value="verb">verb</option></select></td><td><a href="#" class="btn danger small delete_sense">X</a></td></tr>');
+
+    $("#count").val(count+1);
+    return false;
+  });
+
+  $("a.delete_sense").click(function(){
+    $(this).parent().parent().remove();
+    //$(this).parent().parent().children('input').attr('disabled', 'disabled');
+    return false;
+  });
+
 
   $("a.show-change-raw").click(function(){
     var pre = $(this).next("pre");

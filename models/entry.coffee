@@ -1,18 +1,24 @@
-korean = require("../public/javascripts/korean.js")
+ktools = require("../public/javascripts/korean.js")
 
 # TODO: Abstract this validation out to a seperate module to be used in interface
 #       code
 valHangul = (value) ->
-  return korean.detect_characters(value) == 'hangul'
+  return ktools.detect_characters(value) == 'hangul'
 
 valAlphanumeric = (value) ->
-  return korean.detect_characters(value) == 'english'
+  return ktools.detect_characters(value) == 'english'
 
 valHanja = (value) ->
-  return korean.detect_characters(value) == 'hanja'
+  return ktools.detect_characters(value) == 'hanja'
 
 valPOS = (value) ->
   true
+
+cleanSpaces = (value) ->
+  console.log "Cleaning spaces"
+  console.log value
+  return value.replace(/^\s+|\s+$/g, '')
+
 
 defineModel = (mongoose, fn) ->
   Schema = mongoose.Schema
@@ -23,6 +29,7 @@ defineModel = (mongoose, fn) ->
       type: String
       validate: [ valHanja, "Hanja must only contain Chinese (Hanja) characters" ]
       index: true
+      set: cleanSpaces
     ]
     pos:
       type: String
@@ -36,7 +43,8 @@ defineModel = (mongoose, fn) ->
       ]
     related:
       type: [ String ]
-      validate: [ valHangul, "Related words must only contain Hangul characters" ]
+      # TODO Optional
+      #validate: [ valHangul, "Related words must only contain Hangul characters" ]
 
     legacy:
       submitter: String
@@ -46,10 +54,35 @@ defineModel = (mongoose, fn) ->
   Sense.virtual("id").get ->
     @_id.toHexString()
 
+  Sense.path('hanja').set (list) ->
+    out_list = []
+    for val in list
+      out_list.push val.replace(/^\s+|\s+$/g, '')
+    return out_list
+
+  Sense.path('definitions.english').set (list) ->
+    out_list = []
+    for val in list
+      out_list.push val.replace(/^\s+|\s+$/g, '')
+    return out_list
+
   Sense.virtual("definitions.english_all").get ->
+    console.log @definitions.english
     @definitions.english.join('; ')
+
   Sense.virtual("definitions.english_all").set (list) ->
-    @definitions.english.list.split('; ')
+    # TODO What about removing whitespace and all that junk
+    console.log "List:"
+    console.log list
+    if list
+      @definitions.english = list.split(';')
+
+  Sense.virtual("hanja_all").get ->
+    @hanja.join('; ')
+  Sense.virtual("hanja_all").set (list) ->
+    # TODO What about removing whitespace and all that junk
+    if list
+      @hanja = list.split(';')
 
 
 
@@ -61,8 +94,9 @@ defineModel = (mongoose, fn) ->
         index:
           unique: true
         validate: [ valHangul, "Korean must not contain English characters" ]
+        set: cleanSpaces
 
-      length:
+      length: # But what about the fact that JS has a length function
         type: Number
         required: true
         index: true
@@ -97,8 +131,9 @@ defineModel = (mongoose, fn) ->
     # TODO Automatically generate phonetic representation
     # TODO Automatically create Update
     # TODO Increment revision count
-    korean.length = korean.hangul.length
-    korean.revision = korean.revision + 1
+    console.log "korean"
+    console.log @korean
+    @korean.hangul['length'] = @korean.hangul.length
     next()
 
   mongoose.model "Entry", Entry

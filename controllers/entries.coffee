@@ -19,24 +19,27 @@ exports.show = (req, res, next) ->
   Entry.findOne( { 'korean.hangul' : req.params.word } ).populate('updates', ['created_at']).populate('tags').run (err, entry) ->
     return next(new NotFound("Entry not found")) unless entry
     console.log entry
-    res.render 'entries/show', locals:
-      entry: entry
-      title: entry.korean.hangul
+    res.render 'entries/show',
+      locals:
+        entry: entry
+        title: entry.korean.hangul
 
 # Is this needed?
 exports.showById = (req, res, next) ->
   Entry.findById( req.params.id ).populate('updates').run (err, entry) ->
     return next(new NotFound("Entry not found")) unless entry
     console.log entry
-    res.render 'entries/show', locals:
-      entry: entry
-      title: entry.korean.hangul
+    res.render 'entries/show',
+      locals:
+        entry: entry
+        title: entry.korean.hangul
 
 exports.new = (req, res) ->
   console.log "Displaying new form"
-  res.render "entries/new", locals:
-    title: "New Entry"
-    entry: new Entry()
+  res.render "entries/new",
+    locals:
+      title: "New Entry"
+      entry: new Entry()
 
 exports.create = (req, res, next) ->
   console.log "Trying to create new entry"
@@ -172,19 +175,29 @@ Object.extend = (destination, source) ->
       destination[property] = source[property];
   return destination;
 
-# exporting to test
+# Q is essentially free text
 parseQ = (text, next) ->
   next() if not text or text.match /^\s*$/
 
   words = text.split(" ")
   async.map words, parseWord, (err, results) ->
-    
-    console.log results
     next(results)
     
-parseWord = (word, next) ->
-  console.log "Checking " + word
+    # Merge results by key
+      #merged = {}
+      #for i of results
+      #  # There's only going to be one key but this seems to be the only way
+      #  for key,val of results[i]
+      #    if !merged[key]
+      #      merged[key] = []
+      #    merged[key].push val
+      #console.log "Merged"
+      #console.log merged
+      #next(merged)
 
+# This should only be used by the GUI, really
+# the Q thing should never have
+parseWord = (word, next) ->
   switch word.charAt(0)
     when '!', '#'
       parseTag word, next
@@ -192,6 +205,11 @@ parseWord = (word, next) ->
       parsePOS word, next
     else
       parseText word, next
+
+# Parse Q, move !tag stuff to appropriate GET stuff and redirect
+#exports.parseAndRedirect = (req, res, next) ->
+
+
 
 
 parseTag = (word, next) ->
@@ -201,8 +219,10 @@ parseTag = (word, next) ->
     when '#' then type = 'user'
 
   Tag.findOne { 'short' : short, 'type' : type }, (err, tag) ->
-    next err unless tag
-    next( null, { 'tags' : tag._id } )
+    if !tag
+      next err
+    else
+      next( null, { 'tags' : tag._id } )
 
 parsePOS = (word, next) ->
   without_dot = word.substr(1, word.length - 1)
@@ -218,25 +238,34 @@ parseText = (word, next) ->
     when 'hanja'
       next(null, { 'senses.hanja' : val })
 
-parseParams = (pair, next) ->
+# Parse a single GET parameter
+parseParam = (pair, next) ->
   key = pair[0]
   val = pair[1]
   switch key
     when "q"
-      console.log "Parsing"
+      console.log "Parsing q"
       parseQ val, (results) ->
         console.log "Keyval q outer results: "
         console.log results
-        # Race conditions? 
-        query = {}
-        for i, keyval of results
-          query = Object.extend(query, keyval)
-        console.log "Inner query: "
-        console.log query
-        next(null, query)
+        next(null, results)
 
-    when "tag" then parseTag( val, next )
-    when "pos" then parsePOS( val, next )
+    when "tags"
+      tags = val.split(' ')
+      console.log "Raw tags"
+      console.log tags
+      async.map tags, parseTag, (err, results) ->
+        console.log "Parsed tags"
+        console.log results
+        next(null, results)
+    
+    # Looking for entries with multiple POS doesn't really make sense
+    # although I guess you could look for words that have senses where they're
+    # both a noun and a verb. That might be handy
+    when "pos"
+      pos = val.split(' ')
+      async.map pos, parsePOS, (err, results) ->
+        next(null, results)
 
     else
       console.log "Unknown key, not going to be processing this"
@@ -248,33 +277,32 @@ exports.search = (req, res, next) ->
   for key of req.query
     pairs.push( [ key, req.query[key] ] )
 
-  async.map pairs, parseParams, (err, results) ->
-    console.log ""
-    console.log "Result parts:"
-    console.log results
-    query = {}
-# { $or : [ { 'senses.definitions.english' : /a/i, 'senses.definitions.english' : /hello/i } ] }
-    # { x : { $in : [ a, b ] } }
-    for i of results
-      console.log i
-      console.log results[i]
-      for key of results[i]
-        console.log key
-        val = results[i][key]
-        console.log "Key: " + key
-        console.log "Val: " + val
-        # Need to do an OR thing
-        if query[key]
-          console.log query[key]
-          console.log query[key][1]
-          existing = query[key][1]
-          existing = Object.extend(existing, val)
-        query = Object.extend(query, { '$in' : existing })
+  async.map pairs, parseParam, (err, results) ->
+    # Results will be an array of arrays.
+    # q, tags, pos
+    #    each thing within that
 
-    console.log ""
+    query = {}
+
+    for i, arr of results
+      #console.log "Key:"
+      #console.log key
+      #console.log "Val:"
+      #console.log val
+      for j, pair of arr
+        for key, val of pair # Not really iterating, just only way to get key/val
+          # Query already exists
+          if (!query[key])
+            query[key] = val
+          else
+            # If there's only one existing thing, we need to make it into an array first
+            if (query[key].length = 1)
+              old = query[key]
+              query[key] = { '$all' : [ old ] }
+            query[key]['$all'].push( val )
+
     console.log "Query:"
     console.log query
-    console.log ""
   
     paginator = new Paginator req
     order = "korean.length"
@@ -324,7 +352,11 @@ exports.edit = (req, res, next) ->
     return next(new NotFound("Entry not found"))  unless entry
     console.log "Dumping contents of D baby"
     console.log entry
-    res.render "entries/edit", locals: entry: entry
+    all_pos = ['noun', 'verb']  # TODO Get all parts of speech
+    res.render "entries/edit",
+      locals:
+        entry: entry
+        all_pos: all_pos
 
 exports.update = (req, res, next) ->
   console.log "Trying to update document"
@@ -343,41 +375,72 @@ exports.update = (req, res, next) ->
     console.log "------------------------"
     console.log "Req params:"
     console.log req.params
-    change = {}
-    unless entry.korean.word == req.body.entry.korean
-      change.korean = {}
-      change.korean.word = req.body.entry.korean
-      change.korean.length = req.body.entry.korean.length
-    change.hanja = req.body.entry.hanja  unless entry.hanja == req.body.entry.hanja
-    unless entry.definitions.english == [ req.body.entry.english ]
-      change.definitions = {}
-      change.definitions.english = req.body.entry.english
-    entry.hanja = req.body.entry.hanja
-    console.log "------------------------"
-    console.log "Changes:"
-    console.log change
-    console.log "------------------------"
+
+    #change = {}
+    #unless entry.korean.hangul == req.body.entry.korean.hangul
+    #  change.korean = {}
+    #  change.korean.korean.hangul = req.body.entry.korean.hangul
+
+    #console.log "Changes:"
+    #console.log change
+    #console.log "------------------------"
+
+    #console.log req.body.entry.senses.length
+    #console.log entry.senses.length
+    #console.log "------------------------"
+
+    #for sense, i in req.body.entry.senses
+    #  console.log "Sense"
+    #  console.log sense
+    #  console.log i
+    #  unless entry.senses[i].hanja == sense.hanja
+    #    if not change.senses
+    #      change.senses = []
+    #    change.senses[i] = {}
+    #    change.senses[i].hanja = sense.hanja
+    #  
+    #  unless entry.senses[i].english_all == sense.english_all
+    #    english_defs = sense.all_english.split(';')
+    #    for def, j in english_defs
+    #      change.senses[i].english[j] = def
+
+    entry.korean.hangul = req.body.entry.korean.hangul
+
+    reduced_senses = []
+    for val, i in req.body.entry.senses
+      if val
+        reduced_senses.push val
+    entry.senses = reduced_senses
+
     console.log "Updated entry:"
     console.log entry
     entry.save (err) ->
+      console.log "Tried saving"
       if err
         console.log "Save error"
         console.log err
+        req.flash "error", err
+        all_pos = ['noun', 'verb']  # TODO Get all parts of speech
+        console.log entry
+        res.render "entries/edit",
+          locals:
+            entry: entry
+            all_pos: all_pos
       else
-        update = new Update()
-        update.change = change
-        update.user_id = req.session.user._id
-        update.word_id = entry._id
-        update.save (err) ->
-          if err
-            console.log "Save error"
-            console.log err
-      switch req.params.format
-        when "json"
-          res.send entry.toObject()
-        else
-          req.flash "info", "Entry updated"
-          res.redirect "/entries/" + req.params.id
+        #update = new Update()
+        #update.change = change
+        #update.user_id = req.session.user._id
+        #update.word_id = entry._id
+        #update.save (err) ->
+        #  if err
+        #    console.log "Save error"
+        #    console.log err
+        switch req.params.format
+          when "json"
+            res.send entry.toObject()
+          else
+            req.flash "info", "Entry updated"
+            res.redirect "/entries/" + req.params.id
 
 exports.delete = (req, res, next) ->
   Entry.findById req.params.id, (err, d) ->
