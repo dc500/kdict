@@ -10,6 +10,10 @@ ul.flag {
     margin-top: 0;
 }
 
+.geeks {
+    background-image: url('/images/geeks.png');
+}
+
 
 .hanja {
     color: #999;
