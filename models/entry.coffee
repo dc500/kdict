@@ -19,28 +19,30 @@ cleanSpaces = (value) ->
   console.log value
   return value.replace(/^\s+|\s+$/g, '')
 
+fail = (value) ->
+  return false
 
 defineModel = (mongoose, fn) ->
   Schema = mongoose.Schema
 
   # Bundles up all data for a single 'meaning' thinking from the Korean perspective
   Sense = new Schema(
-    hanja: [
-      type: String
+    hanja:
+      type: [ String ]
       validate: [ valHanja, "Hanja must only contain Chinese (Hanja) characters" ]
       index: true
       set: cleanSpaces
-    ]
     pos:
       type: String
       validate: [ valPOS, "POS must be one of a list of approved part of speech tags" ]
 
     definitions:
-      english: [
-        type: String
-        validate: [ valAlphanumeric, "English must only contain alphanumeric characters" ]
+      english:
+        type: [ String ]
+        validate: [ fail, "English must only contain alphanumeric characters" ]
+        #validate: [ valAlphanumeric, "English must only contain alphanumeric characters" ]
         index: true
-      ]
+        required: true
     related:
       type: [ String ]
       # TODO Optional
@@ -61,10 +63,20 @@ defineModel = (mongoose, fn) ->
     return out_list
 
   Sense.path('definitions.english').set (list) ->
+    console.log "Setting definitions.english with a list: "
+    console.log list
     out_list = []
     for val in list
       out_list.push val.replace(/^\s+|\s+$/g, '')
     return out_list
+
+  Sense.path('definitions.english').validate (val) ->
+    console.log "Validating Englishsssshshs"
+    console.log val
+    return false
+
+    
+
 
   Sense.virtual("definitions.english_all").get ->
     console.log @definitions.english
@@ -100,6 +112,7 @@ defineModel = (mongoose, fn) ->
         type: Number
         required: true
         index: true
+        min: 1
       # TODO Phonetic stuff
       # TODO: mr: { type: String, index: false, validate: [ valAlphabet, 'McCune-Reischauer must only contain alphabetic characters' },
       # TODO: yale: { type: String, index: false, validate: [ valAlphabet, 'Yale must only contain alphabetic characters' },
@@ -110,18 +123,16 @@ defineModel = (mongoose, fn) ->
     senses: [ Sense ]
 
     # More general-use, users able to set
-    tags: [
-      type:   Schema.ObjectId
+    tags:
+      type: [ Schema.ObjectId ]
       index:  true
       ref:    "Tag"
-    ]
 
     # NEW: Not sure if this is overkill on data duplication
-    updates: [
-      type: Schema.ObjectId
+    updates:
+      type: [ Schema.ObjectId ]
       #index: true
       ref:  "Update"
-    ]
   )
 
   Entry.virtual("id").get ->

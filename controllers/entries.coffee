@@ -414,6 +414,8 @@ exports.update = (req, res, next) ->
 
     console.log "Updated entry:"
     console.log entry
+    console.log "Sample definitions"
+    console.log entry.senses[0].definitions
     entry.save (err) ->
       console.log "Tried saving"
       if err
@@ -427,6 +429,7 @@ exports.update = (req, res, next) ->
             entry: entry
             all_pos: all_pos
       else
+        console.log "Successful save"
         #update = new Update()
         #update.change = change
         #update.user_id = req.session.user._id

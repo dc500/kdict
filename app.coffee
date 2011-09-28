@@ -129,13 +129,17 @@ app.configure "test", ->
 
 
 entry.defineModel mongoose, ->
-  console.log("Defining entry")
+  console.log("Defined entry")
+
   update.defineModel mongoose, ->
-    console.log("Defining update")
+    console.log("Defined update")
+
     tag.defineModel mongoose, ->
-      console.log("Defining tag")
+      console.log("Defined tag")
+
       user.defineModel mongoose, ->
-        console.log("Defining user")
+        console.log("Defined user")
+
         db = mongoose.connect(app.set("db-uri"))
 
 ###

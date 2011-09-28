@@ -5,7 +5,8 @@
 //       There MUST be a nicer way of doing testing
 // TODO: Maybe convert this to use Capybara-zombie?
 
-var app        = require('../app'),
+var //coffee     = require('coffeescript'),
+    app        = require('../app.coffee'),
     assert     = require('assert'),
     zombie     = require('zombie'),
     events     = require('events'),
