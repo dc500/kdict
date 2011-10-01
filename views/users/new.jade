@@ -19,8 +19,14 @@
           label(for='user[password]') Password
           div.input
             input(name='user[password]', type='password')
+
+        div.clearfix
+          label(for='user[confirmPassword]') Confirm password
+          div.input
+            input(name='user[confirmPassword]', type='password')
     
         div.actions
-          input(type='submit', value='Sign up', class="btn primary")
+          input(type='submit', value='Sign up', class="btn primary large") 
+          | 
           button(type='reset', class="btn") Clear
 

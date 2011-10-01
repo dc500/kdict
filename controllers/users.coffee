@@ -51,6 +51,11 @@ exports.create = (req, res) ->
     res.render "users/new", locals:
       title: 'Sign up'
       user: user
+
+  if req.body.user.password != req.body.user.confirmPassword
+    req.flash "error", "Passwords do not match"
+    return userSaveFailed()
+
   user = new User(req.body.user)
   user.save (err) ->
     if err

@@ -28,15 +28,17 @@ defineModel = (mongoose, fn) ->
 
   valUsername = (value) ->
     value.match /^[a-z0-9_]{4,20}$/
-  User.path('username').validate(valUsername, 'Username must be between 4 and 20 characters, and only contain alphabetical characters and _')
+  User.path("username").validate(valUsername, "Username must be between 4 and 20 characters, and only contain alphabetical characters and _")
 
   valPassword = (value) ->
-    value.length >= 6 and value.length <= 64
-  ##User.path('password').validate(valPassword, 'Password must be at least 6 characters')
+    value.length >= 6 and
+      value.length <= 64 and
+      value != @password
+  ##User.path("password").validate(valPassword, "Password must be at least 6 characters")
 
   valEmail = (value) ->
     value.match /^.+@.+$/
-  User.path('email').validate(valEmail, "Email doesn't look right...")
+  User.path("email").validate(valEmail, "Email doesn't look right...")
 
   User.virtual("id").get ->
     @_id.toHexString()
@@ -50,11 +52,11 @@ defineModel = (mongoose, fn) ->
 
   User.virtual("level").get ->
     if @score > 1000
-      return 'edit'
+      return "edit"
     else if @score > 100
-      return 'something'
+      return "something"
     else
-      return 'normal'
+      return "normal"
 
   User.method "makeSalt", ->
     Math.round((new Date().valueOf() * Math.random())) + ""
@@ -66,8 +68,7 @@ defineModel = (mongoose, fn) ->
     crypto.createHmac("sha256", @salt).update(password).digest "hex"
 
   User.pre "save", (next) ->
-    unless valPresenceOf(@password)
-      console.log "NO PASSWORD"
+    unless valPassword(@password)
       next new Error("Invalid password")
     else
       console.log "Next"

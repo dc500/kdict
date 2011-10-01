@@ -5,64 +5,111 @@ tag      = require "../models/tag"
 
 db_uri = "mongodb://localhost/kdict_test"
 db = mongoose.connect(db_uri)
+
 tag.defineModel mongoose, ->
   
+model =
+  single: (short, type, long) ->
+    ->
+      tag = new Tag
+        short: short
+        type:  type
+      if long
+        tag.long = long
+      tag.save @callback
+ 
+assertPropErr = (prop) ->
+  (err, tag) ->
+    assert.isUndefined tag
+    assert.isNotNull   err
+    assert.isNotNull   err.errors[prop]
+
 
 Tag = mongoose.model("Tag")
 
+# Drop tags
+Tag.collection.drop()
+
 tagBatch = vows.describe("Tag").addBatch(
   "A tag":
-    "when creating new tag with a duplicate short name":
-      topic: ->
-        existing = new Tag(
-          long:  'Some tag'
-          short: '!snowflake'
-          type:  'problem'
-        )
-        existing.save
+    "when creating tag where type does not match short name prefix":
+      topic: model.single("!cheesecake", "user")
+      "it fails": assertPropErr("short")
 
-        dup = new Tag
-          long:  'whatever'
-          short: '!snowflake'
-          type:  'problem'
-        dup.save this.callback
+    "when creating tag with short name without prefix":
+      topic: model.single("noprefix", "user")
+      "it fails": assertPropErr("short")
 
-      "it fails": (err, tag) ->
-        console.log err
-        assert.notEqual err, null
+    "when creating tag with short name with spaces":
+      topic: model.single("@hello there", "user")
+      "it fails": assertPropErr("short")
 
     "when creating perfect tag":
       topic: ->
-        mix = new Tag
-          long: 'Some tag'
-          short: '!snowflake'
-          type: 'problem'
-        mix.save this.callback
-      
-      "it succeeds": (err, tag) ->
-        assert.equal err, null
-    
-    "when creating tag where type does not match short name prefix":
-      topic: ->
-        mix = new Tag
-          long: 'Some tag'
-          short: '!snowflake'
-          type: 'user'
-        mix.save this.callback
-      
-      "it fails": (err, tag) ->
-        assert.notEqual err, null
+        tag = new Tag
+          short: "!magical"
+          type:  "problem"
+        tag.save this.callback
+        #model.single("!magical", "problem")
 
-    "when creating tag with short name without prefix":
+      "it succeeds": (err, tag) ->
+        assert.isNull    err
+        assert.isNotNull tag
+        assert.equal tag.short, "!magical"
+        assert.equal tag.long,  ""
+        assert.equal tag.type,  "problem"
+    
+)
+.addBatch(
+  "A tag":
+    "when creating new tag with a duplicate short name":
       topic: ->
-        mix = new Tag
-          long:  'Some tag'
-          short: 'snowflake'
-          type:  'user'
-        mix.save this.callback
-      
+        existing = new Tag
+          long:  "Some tag"
+          short: "!snowflake"
+          type:  "problem"
+        existing.save this.callback #(e, t) ->
+        #  if e
+        #    console.log e
+        #  dup = new Tag
+        #    long:  "whatever"
+        #    short: "!snowflake"
+        #    type:  "problem"
+        #  dup.save @callback
+        ###
+        (err, tag) ->
+          console.log "Before"
+          console.log err
+          console.log tag
+          if err
+            this.callback err
+          else
+            # assert.throws( dup.save, MongoError );
+            dup = new Tag
+              long:  "whatever"
+              short: "!snowflake"
+              type:  "problem"
+            dup.save (err, tag) ->
+              console.log err
+              console.log tag
+              this.callback
+        ###
+
       "it fails": (err, tag) ->
+        assert.isNotNull err
+        assert.isNull tag
+
+        #dup = new Tag
+        #  long:  "whatever"
+        #  short: "!snowflake"
+        #  type:  "problem"
+        #assert.throws( dup.save, MongoError );
+        ###
+        console.log "Fails?"
+        console.log err
+        console.log tag
         assert.notEqual err, null
+        ###
 )
 
 tagBatch.export module

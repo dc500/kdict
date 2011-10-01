@@ -19,12 +19,26 @@ defineModel = (mongoose, next) ->
       required: true
       validate: [ valPrefixChar, "Prefix character must exist and match tag type" ]
       # TODO: Validation that prefix must match type
+      #validate: [ valUnique, 'moo' ]
+      ###
+      (v) ->
+          valPrefixChar(v) && valUnique(v)
+        'composite']
+      ###
       
     type:
       type:     String
       enum:     [ "problem", "user" ]
       required: true
   )
+
+  #Tag.path("short").validate (short_word) ->
+  #  console.log "Validating uniqueness of " + short_word
+  #  self.findOne( { "short": short_word } ) (err, word) ->
+  #    if (word)
+  #      return false
+  #    else
+  #      return true
 
   mongoose.model "Tag", Tag
   next()

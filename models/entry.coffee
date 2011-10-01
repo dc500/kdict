@@ -3,21 +3,39 @@ ktools = require("../public/javascripts/korean.js")
 # TODO: Abstract this validation out to a seperate module to be used in interface
 #       code
 valHangul = (value) ->
-  return ktools.detect_characters(value) == 'hangul'
+  return ktools.detect_characters(value) == "hangul"
 
-valAlphanumeric = (value) ->
-  return ktools.detect_characters(value) == 'english'
+valAlphanumeric = (values) ->
+  console.log "Validating English"
+  console.log values
+  for val in values
+    if ktools.detect_characters(val) != "english"
+      return false
+  return true
 
-valHanja = (value) ->
-  return ktools.detect_characters(value) == 'hanja'
+valHanja = (values) ->
+  console.log "Validating hanja"
+  console.log values
+  for val in values
+    if ktools.detect_characters(val) != "hanja"
+      return false
+  return true
 
 valPOS = (value) ->
   true
 
-cleanSpaces = (value) ->
-  console.log "Cleaning spaces"
-  console.log value
-  return value.replace(/^\s+|\s+$/g, '')
+trim = (value) ->
+  if Array.isArray(value)
+    for val in value
+      val = _trim(val)
+    return value
+  else
+    return _trim(value)
+  return value
+
+_trim = (value) ->
+  return value.replace(/^\s+|\s+$/g, "")
+
 
 fail = (value) ->
   return false
@@ -25,13 +43,13 @@ fail = (value) ->
 defineModel = (mongoose, fn) ->
   Schema = mongoose.Schema
 
-  # Bundles up all data for a single 'meaning' thinking from the Korean perspective
+  # Bundles up all data for a single "meaning" thinking from the Korean perspective
   Sense = new Schema(
     hanja:
       type: [ String ]
       validate: [ valHanja, "Hanja must only contain Chinese (Hanja) characters" ]
       index: true
-      set: cleanSpaces
+      set: trim
     pos:
       type: String
       validate: [ valPOS, "POS must be one of a list of approved part of speech tags" ]
@@ -39,8 +57,8 @@ defineModel = (mongoose, fn) ->
     definitions:
       english:
         type: [ String ]
-        validate: [ fail, "English must only contain alphanumeric characters" ]
-        #validate: [ valAlphanumeric, "English must only contain alphanumeric characters" ]
+        #validate: [ fail, "English must only contain alphanumeric characters" ]
+        validate: [ valAlphanumeric, "English must only contain alphanumeric characters" ]
         index: true
         required: true
     related:
@@ -56,45 +74,43 @@ defineModel = (mongoose, fn) ->
   Sense.virtual("id").get ->
     @_id.toHexString()
 
-  Sense.path('hanja').set (list) ->
+  #Sense.path("hanja").set (list) ->
+  #  out_list = []
+  #  for val in list
+  #    out_list.push val.replace(/^\s+|\s+$/g, "")
+  #  return out_list
+
+  Sense.path("definitions.english").set (list) ->
     out_list = []
     for val in list
-      out_list.push val.replace(/^\s+|\s+$/g, '')
+      out_list.push val.replace(/^\s+|\s+$/g, "")
     return out_list
 
-  Sense.path('definitions.english').set (list) ->
-    console.log "Setting definitions.english with a list: "
-    console.log list
-    out_list = []
-    for val in list
-      out_list.push val.replace(/^\s+|\s+$/g, '')
-    return out_list
-
-  Sense.path('definitions.english').validate (val) ->
-    console.log "Validating Englishsssshshs"
-    console.log val
-    return false
+  #Sense.path("definitions.english").validate (val) ->
+  #  console.log "Validating Englishsssshshs"
+  #  console.log val
+  #  return false
 
     
 
 
   Sense.virtual("definitions.english_all").get ->
     console.log @definitions.english
-    @definitions.english.join('; ')
+    @definitions.english.join("; ")
 
   Sense.virtual("definitions.english_all").set (list) ->
     # TODO What about removing whitespace and all that junk
     console.log "List:"
     console.log list
     if list
-      @definitions.english = list.split(';')
+      @definitions.english = list.split(";")
 
   Sense.virtual("hanja_all").get ->
-    @hanja.join('; ')
+    @hanja.join("; ")
   Sense.virtual("hanja_all").set (list) ->
     # TODO What about removing whitespace and all that junk
     if list
-      @hanja = list.split(';')
+      @hanja = list.split(";")
 
 
 
@@ -105,19 +121,18 @@ defineModel = (mongoose, fn) ->
         required: true
         index:
           unique: true
-        validate: [ valHangul, "Korean must not contain English characters" ]
-        set: cleanSpaces
+        validate: [ valHangul, "Hangul must only contain Hangul characters" ]
 
-      length: # But what about the fact that JS has a length function
+      hangul_length: # But what about the fact that JS has a length function
         type: Number
-        required: true
+        #required: true
         index: true
         min: 1
       # TODO Phonetic stuff
-      # TODO: mr: { type: String, index: false, validate: [ valAlphabet, 'McCune-Reischauer must only contain alphabetic characters' },
-      # TODO: yale: { type: String, index: false, validate: [ valAlphabet, 'Yale must only contain alphabetic characters' },
-      # TODO: rr: { type: String, index: false, validate: [ valAlphabet, 'Revised Romanization must only contain alphabetic characters' },
-      # TODO: ipa: { type: String, index: false, validate: [ valIPA, 'IPA must only contain IPA characters' },
+      # TODO: mr: { type: String, index: false, validate: [ valAlphabet, "McCune-Reischauer must only contain alphabetic characters" },
+      # TODO: yale: { type: String, index: false, validate: [ valAlphabet, "Yale must only contain alphabetic characters" },
+      # TODO: rr: { type: String, index: false, validate: [ valAlphabet, "Revised Romanization must only contain alphabetic characters" },
+      # TODO: ipa: { type: String, index: false, validate: [ valIPA, "IPA must only contain IPA characters" },
       # TODO: simplified // our hacky thing
 
     senses: [ Sense ]
@@ -138,14 +153,20 @@ defineModel = (mongoose, fn) ->
   Entry.virtual("id").get ->
     @_id.toHexString()
 
+  Entry.path("korean.hangul").set (hangul) ->
+    @korean.hangul_length = hangul.length
+    return trim(hangul)
+
+  ###
   Entry.pre "save", (next) ->
     # TODO Automatically generate phonetic representation
     # TODO Automatically create Update
     # TODO Increment revision count
-    console.log "korean"
+    console.log "PRE SAVE IN THEORY"
     console.log @korean
-    @korean.hangul['length'] = @korean.hangul.length
+    @korean.hangul_length = @korean.hangul.length
     next()
+  ###
 
   mongoose.model "Entry", Entry
   fn()

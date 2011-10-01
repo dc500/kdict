@@ -1,2 +1,2 @@
-/Users/ben/Documents/programming/mongodb/bin/mongod --dbpath /Volumes/iDisk/mongo_data
+/Users/ben/Documents/programming/mongodb/bin/mongod --dbpath /Volumes/benuaq/mongo_data
 
