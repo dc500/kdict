@@ -2,6 +2,7 @@ vows     = require "vows"
 assert   = require "assert"
 mongoose = require "mongoose"
 tag      = require "../models/tag"
+helpers  = require "./helpers"
 
 db_uri = "mongodb://localhost/kdict_test"
 db = mongoose.connect(db_uri)
@@ -18,13 +19,6 @@ model =
         tag.long = long
       tag.save @callback
  
-assertPropErr = (prop) ->
-  (err, tag) ->
-    assert.isUndefined tag
-    assert.isNotNull   err
-    assert.isNotNull   err.errors[prop]
-
-
 Tag = mongoose.model("Tag")
 
 # Drop tags
@@ -34,15 +28,15 @@ tagBatch = vows.describe("Tag").addBatch(
   "A tag":
     "when creating tag where type does not match short name prefix":
       topic: model.single("!cheesecake", "user")
-      "it fails": assertPropErr("short")
+      "it fails": helpers.assertPropErr("short")
 
     "when creating tag with short name without prefix":
       topic: model.single("noprefix", "user")
-      "it fails": assertPropErr("short")
+      "it fails": helpers.assertPropErr("short")
 
     "when creating tag with short name with spaces":
       topic: model.single("@hello there", "user")
-      "it fails": assertPropErr("short")
+      "it fails": helpers.assertPropErr("short")
 
     "when creating perfect tag":
       topic: ->

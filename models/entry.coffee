@@ -1,5 +1,12 @@
 ktools = require("../public/javascripts/korean.js")
 
+mongoose = require "mongoose"
+update   = require "../models/update"
+update.defineModel mongoose, ->
+  
+Update = mongoose.model("Update")
+
+
 # TODO: Abstract this validation out to a seperate module to be used in interface
 #       code
 valHangul = (value) ->
@@ -157,16 +164,48 @@ defineModel = (mongoose, fn) ->
     @korean.hangul_length = hangul.length
     return trim(hangul)
 
-  ###
   Entry.pre "save", (next) ->
     # TODO Automatically generate phonetic representation
     # TODO Automatically create Update
     # TODO Increment revision count
     console.log "PRE SAVE IN THEORY"
-    console.log @korean
-    @korean.hangul_length = @korean.hangul.length
-    next()
-  ###
+
+    # Only create delta Update if this is an update with non-update content
+    change = @_delta()
+    if change
+      console.log "DELTA"
+      console.log change
+
+      context = this
+      console.log "1 foo"
+
+      update = new Update
+        user:   @id #'todo'
+        entry:  @id
+        before: {} #change['$set']
+        after:  {}
+        type:   "new"
+      update.save (err, saved) ->
+        console.log "2 foo"
+        if err
+          console.log "foo"
+          console.log "Save error"
+          console.log err
+        else
+          console.log "foo"
+          # TODO actually saving. But this would make a recursive loop, generating an update
+          #      in order to actually set the update
+          console.log "Saved update! This:"
+          console.log saved
+          console.log context.updates.push saved.id
+          context.save (err2, mod) ->
+            console.log "Added update"
+            console.log err2
+            console.log mod
+        next()
+
+    else
+      next()
 
   mongoose.model "Entry", Entry
   fn()

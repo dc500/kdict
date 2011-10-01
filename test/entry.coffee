@@ -2,14 +2,13 @@ vows     = require "vows"
 assert   = require "assert"
 mongoose = require "mongoose"
 entry    = require "../models/entry"
+helpers  = require "./helpers"
 
 db_uri = "mongodb://localhost/kdict_test"
 db = mongoose.connect(db_uri)
 entry.defineModel mongoose, ->
   
-
 Entry = mongoose.model("Entry")
-# Drop users
 Entry.collection.drop()
 
 # Magical macro
@@ -28,19 +27,13 @@ model =
       if hanja
         if not Array.isArray(hanja)
           hanja = [ hanja ]
-        entry.hanja = hanja
+        entry.senses[0].hanja = hanja
+        console.log "HANJA BABY"
+        console.log entry
       entry.save @callback
- 
-assertPropErr = (prop) ->
-  (err, entry) ->
-    console.log err
-    console.log entry
-    assert.isNull    entry
-    assert.isNotNull err
-    assert.isNotNull err.errors[prop]
 
 
-entryBatch = vows.describe("Entry").addBatch(
+vows.describe("Entry").addBatch(
   "An entry":
     "with valid korean word":
       topic: model.single("한국어", "cheese")
@@ -58,15 +51,57 @@ entryBatch = vows.describe("Entry").addBatch(
 
     "with non-hangul in hangul":
       topic: model.single("what", "yeah")
-      "should error on save": assertPropErr("korean.hangul")
+      "should error on save": helpers.assertPropErr("korean.hangul")
 
     "with non-English in English":
       topic: model.single("영어", "영어")
-      "should error on save": assertPropErr("senses.definitions.english")
+      "should error on save": helpers.assertPropErr("definitions.english") # Because part of Senses model
 
     "with non-hanja in hanja":
       topic: model.single("하핳하", "boo", "meh")
-      "should error on save": assertPropErr("senses.hanja")
-)
+      "should error on save": helpers.assertPropErr("definitions.hanja") # Because part of Senses model
 
-entryBatch.export module
+    "with english_all attribute":
+      topic: ->
+        console.log "Creating"
+        entry = new Entry
+          korean:
+            hangul: "헴"
+          senses: [
+            definitions:
+              english_all: "ham; spam"
+          ]
+        entry.save this.callback
+      "should error on save": (err, entry) ->
+        assert.isArray entry.senses[0].definitions.english, [ "ham", "spam" ]
+
+  "Another entry":
+    "when created":
+      topic: model.single("영국", "England")
+      "should have an update record": (err, entry) ->
+        assert.equal entry.updates.length, 1
+
+    "when updated":
+      topic: ->
+        console.log "Creating"
+        entry = new Entry
+          korean:
+            hangul: "영국인"
+          senses: [
+            definitions:
+              english: [ "Brit" ]
+          ]
+        call = @callback
+        entry.save (err, saved) ->
+          console.log "Saved!"
+          console.log saved
+          saved.korean.hangul = "영영영국"
+          saved.senses[0].definitions.english_all = "limey"
+          saved.save call
+
+      "should have two update records": (err, entry) ->
+        console.log "Saved!"
+        assert.equal entry.updates.length, 2
+        assert.equal entry.korean.hangul_length, 4
+
+).export module
