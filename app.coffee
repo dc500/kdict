@@ -82,9 +82,6 @@ app.configure ->
     ssl: true,
     domain : "kdict.org",
     #authentication : "login"
-    address : "smtp.gmail.com"
-    username : "ben.uaq@gmail.com"
-    password : "ichig0suk1"
     ###
     from: "auto@kdict.com"
     host: "mail.kdict.org"
