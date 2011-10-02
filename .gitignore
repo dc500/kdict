@@ -9,3 +9,7 @@ public/images/purple.gif
 public/images/icons/
 
 npm-debug.log
+
+foo.coffee
+
+lib/mail.conf.coffee

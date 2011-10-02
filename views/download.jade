@@ -25,13 +25,15 @@
     table
       thead
         tr
-          td Date
-          td Filename
-          td Size
+          th Date
+          th Filetype
+          th Filename
+          th Size
         tbody
           - each file in files
             tr
               td= file.date
+              td= file.type
               td
                 a(href="/data/#{file.name}") #{file.name}
               td= file.size

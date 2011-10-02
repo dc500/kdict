@@ -177,12 +177,20 @@ defineModel = (mongoose, fn) ->
       console.log change
 
       context = this
-      console.log "1 foo"
+
+      new_change = {}
+      new_change["set"] = {}
+      for key, val of change["$set"]
+        console.log key
+        #val = change["set"][key]
+        new_key = key.replace(/\./g, ",")
+        new_change["set"][new_key] = val
+      console.log new_change
 
       update = new Update
         user:   @id #'todo'
         entry:  @id
-        before: {} #change['$set']
+        before: new_change
         after:  {}
         type:   "new"
       update.save (err, saved) ->

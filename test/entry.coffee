@@ -73,13 +73,15 @@ vows.describe("Entry").addBatch(
           ]
         entry.save this.callback
       "should error on save": (err, entry) ->
-        assert.isArray entry.senses[0].definitions.english, [ "ham", "spam" ]
+        assert.deepEqual entry.senses[0].definitions.english, [ "ham", "spam" ]
 
   "Another entry":
     "when created":
       topic: model.single("영국", "England")
       "should have an update record": (err, entry) ->
-        assert.equal entry.updates.length, 1
+        assert.length entry.updates, 1
+        #assert.deepEqual
+
 
     "when updated":
       topic: ->
@@ -91,17 +93,17 @@ vows.describe("Entry").addBatch(
             definitions:
               english: [ "Brit" ]
           ]
-        call = @callback
+        local_callback = @callback
         entry.save (err, saved) ->
           console.log "Saved!"
           console.log saved
           saved.korean.hangul = "영영영국"
           saved.senses[0].definitions.english_all = "limey"
-          saved.save call
+          saved.save local_callback
 
       "should have two update records": (err, entry) ->
         console.log "Saved!"
-        assert.equal entry.updates.length, 2
+        assert.length entry.updates, 2
         assert.equal entry.korean.hangul_length, 4
 
 ).export module

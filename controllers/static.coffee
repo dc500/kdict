@@ -66,10 +66,14 @@ getFiles = step.fn(readDir = (directory) ->
     console.log filename
     continue unless filename.match(/.tar$/)
     p = path.join(__dirname, "../data", filename)
+    bits = filename.split(".")
+    parts = bits[bits.length - 2].split("-")
+    filetype = parts[parts.length - 1]
     console.log p
     stats = fs.statSync(p)
     files.push
       name: filename
+      type: filetype
       size: getTextFilesize(stats.size)
       date: stats.mtime
   return files

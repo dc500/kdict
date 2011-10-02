@@ -79,7 +79,8 @@ tr.delete {
 input.search {
   padding: 3px 8px;
   font-size: 3.5em;
-  font-height: 3.5em;
+  /*font-height: 3.5em;*/
+  line-height: 1.3em;
   height: auto;
   width: 780px;
   margin: 2px 0;

@@ -75,24 +75,6 @@ app.configure ->
     enable: [ "less" ]
   )
   app.use express.static(__dirname + "/public")
-  app.set "mailOptions",
-    from: "auto@kdict.com"
-    host: "mail.kdict.org"
-    port: "587"
-    ssl: true,
-    domain : "kdict.org",
-    #authentication : "login"
-    ###
-    from: "auto@kdict.com"
-    host: "mail.kdict.org"
-    port: "587"
-    ssl: true,
-    domain : "kdict.org",
-    authentication : "login"
-    username : "temp@kdict.org"
-    password : "my_password"
-    ###
-    
 
 
 app.dynamicHelpers

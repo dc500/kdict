@@ -1,9 +1,9 @@
-mailer   = require("mailer")
-jade     = require("jade") # for email rendering
-path     = require("path")
-mongoose = require("mongoose")
-User     = mongoose.model("User")
-Update   = mongoose.model("Update")
+mailer   = require "mailer"
+path     = require "path"
+mongoose = require "mongoose"
+User     = mongoose.model "User"
+Update   = mongoose.model "Update"
+mail     = require "../lib/mail"
 
 exports.signup = (req, res) ->
   res.render "users/new", locals:
@@ -62,7 +62,7 @@ exports.create = (req, res) ->
       console.log err
       return userSaveFailed()
     console.log "Save complete"
-    emails.sendConfirmation user
+    sendConfirmation user
     req.flash "info", "Your account has been created"
     switch req.params.format
       when "json"
@@ -90,6 +90,7 @@ exports.show = (req, res, next) ->
     #Update.find( 'user': user._id ).sort('date').limit(20).run (err, updates) ->
     # TODO Ideally want to make 1 request, then reorganise
     # TODO Work out percentages, make pie charts
+    # TODO change this to that parallel async thing
     Update.count( user: objid, type: 'new' ).run (err, added) ->
       Update.count( user: objid, type: 'edit' ).run (err, edited) ->
         Update.count( user: objid, type: 'delete' ).run (err, deleted) ->
@@ -141,7 +142,7 @@ exports.sendResetEmail = (req, res, next) ->
       if err
         console.log err
         res.redirect "/"
-      emails.sendReset req.body.email, link
+      sendReset req.body.email, link
       res.render 'sessions/reset_sent', locals:
         title: 'Reset E-mail Sent'
         address: req.body.email
@@ -173,34 +174,17 @@ exports.resetPassword = (req, res, next) ->
     res.render 'sessions/reset_password', locals:
       title: 'Reset Password'
 
-# Email stuff
-emails =
-  send: (template, mailOptions, templateOptions) ->
-    mailOptions.to = mailOptions.to
-    jade.renderFile path.join(__dirname, "../views", "mailer", template), templateOptions, (err, text) ->
-      mailOptions.body = text
-      keys = Object.keys(app.set("mailOptions"))
-      i = 0
-      len = keys.length
 
-      while i < len
-        k = keys[i]
-        mailOptions[k] = app.set("mailOptions")[k]  unless mailOptions.hasOwnProperty(k)
-        i++
-      console.log "[SENDING MAIL]", sys.inspect(mailOptions)
-      #if app.settings.env == "production"  # SCREW IT
-      mailer.send mailOptions, (err, result) ->
-        console.log err  if err
 
-  sendConfirmation: (user) ->
-    @send "confirm.jade",
-      to: user.email
-      subject: "KDict - Please Confirm"
-    , locals: user: user
+sendConfirmation = (user) ->
+  mail.send_templated "confirm",
+    to: user.email
+    subject: "KDict - Please Confirm"
+  , locals: user: user
 
-  sendReset: (email, link) ->
-    @send "reset.jade",
-      to: email
-      subject: "KDict - Confirm Password Reset"
-    , locals: email: email, link: link
+sendReset = (email, link) ->
+  mail.send_templated "reset",
+    to: email
+    subject: "KDict - Confirm Password Reset"
+  , locals: email: email, link: link
 
