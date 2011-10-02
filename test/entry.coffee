@@ -2,14 +2,19 @@ vows     = require "vows"
 assert   = require "assert"
 mongoose = require "mongoose"
 entry    = require "../models/entry"
+update   = require "../models/update"
 helpers  = require "./helpers"
 
 db_uri = "mongodb://localhost/kdict_test"
 db = mongoose.connect(db_uri)
 entry.defineModel mongoose, ->
   
-Entry = mongoose.model("Entry")
+update.defineModel mongoose, ->
+  
+Entry  = mongoose.model("Entry")
 Entry.collection.drop()
+Update = mongoose.model("Update")
+Update.collection.drop()
 
 # Magical macro
 model =
@@ -28,8 +33,6 @@ model =
         if not Array.isArray(hanja)
           hanja = [ hanja ]
         entry.senses[0].hanja = hanja
-        console.log "HANJA BABY"
-        console.log entry
       entry.save @callback
 
 
@@ -63,7 +66,6 @@ vows.describe("Entry").addBatch(
 
     "with english_all attribute":
       topic: ->
-        console.log "Creating"
         entry = new Entry
           korean:
             hangul: "헴"
@@ -72,20 +74,29 @@ vows.describe("Entry").addBatch(
               english_all: "ham; spam"
           ]
         entry.save this.callback
-      "should error on save": (err, entry) ->
+      "should split into an array of words": (err, entry) ->
         assert.deepEqual entry.senses[0].definitions.english, [ "ham", "spam" ]
 
   "Another entry":
     "when created":
-      topic: model.single("영국", "England")
-      "should have an update record": (err, entry) ->
-        assert.length entry.updates, 1
-        #assert.deepEqual
-
+      #topic: model.single("영국", "England")
+      topic: ->
+        entry = new Entry
+          korean:
+            hangul: "영국"
+          senses: [
+            definitions:
+              english: [ "England" ]
+          ]
+        local_callback = @callback
+        entry.save (err, entry) ->
+          Update.findById entry.updates[0], local_callback
+      "should have an update record": (err, update) ->
+        assert.equal update.content.korean.hangul, "영국"
+        assert.equal update.content.senses[0].definitions.english[0], "England"
 
     "when updated":
       topic: ->
-        console.log "Creating"
         entry = new Entry
           korean:
             hangul: "영국인"
@@ -95,14 +106,13 @@ vows.describe("Entry").addBatch(
           ]
         local_callback = @callback
         entry.save (err, saved) ->
-          console.log "Saved!"
-          console.log saved
+          #console.log saved
           saved.korean.hangul = "영영영국"
           saved.senses[0].definitions.english_all = "limey"
           saved.save local_callback
 
       "should have two update records": (err, entry) ->
-        console.log "Saved!"
+        #console.log "Saved!"
         assert.length entry.updates, 2
         assert.equal entry.korean.hangul_length, 4
 

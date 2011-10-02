@@ -13,16 +13,12 @@ valHangul = (value) ->
   return ktools.detect_characters(value) == "hangul"
 
 valAlphanumeric = (values) ->
-  console.log "Validating English"
-  console.log values
   for val in values
     if ktools.detect_characters(val) != "english"
       return false
   return true
 
 valHanja = (values) ->
-  console.log "Validating hanja"
-  console.log values
   for val in values
     if ktools.detect_characters(val) != "hanja"
       return false
@@ -102,13 +98,10 @@ defineModel = (mongoose, fn) ->
 
 
   Sense.virtual("definitions.english_all").get ->
-    console.log @definitions.english
     @definitions.english.join("; ")
 
   Sense.virtual("definitions.english_all").set (list) ->
     # TODO What about removing whitespace and all that junk
-    console.log "List:"
-    console.log list
     if list
       @definitions.english = list.split(";")
 
@@ -165,58 +158,73 @@ defineModel = (mongoose, fn) ->
     return trim(hangul)
 
   Entry.pre "save", (next) ->
+    context = this
     # TODO Automatically generate phonetic representation
     # TODO Automatically create Update
     # TODO Increment revision count
-    console.log "PRE SAVE IN THEORY"
 
     # Only create delta Update if this is an update with non-update content
     change = @_delta()
-    if change
-      console.log "DELTA"
-      console.log change
+    #save_delta(change)
+    #save_entire_record(this)
 
-      context = this
-
-      new_change = {}
-      new_change["set"] = {}
-      for key, val of change["$set"]
-        console.log key
-        #val = change["set"][key]
-        new_key = key.replace(/\./g, ",")
-        new_change["set"][new_key] = val
-      console.log new_change
-
-      update = new Update
-        user:   @id #'todo'
-        entry:  @id
-        before: new_change
-        after:  {}
-        type:   "new"
-      update.save (err, saved) ->
-        console.log "2 foo"
-        if err
-          console.log "foo"
-          console.log "Save error"
-          console.log err
-        else
-          console.log "foo"
-          # TODO actually saving. But this would make a recursive loop, generating an update
-          #      in order to actually set the update
-          console.log "Saved update! This:"
-          console.log saved
-          console.log context.updates.push saved.id
-          context.save (err2, mod) ->
-            console.log "Added update"
-            console.log err2
-            console.log mod
-        next()
-
-    else
+    # PROBLEM: If we fail saving, we've created an Update document
+    # TODO RESOLVE
+    update = new Update
+      user:    @id # TODO change
+      entry:   @id
+      type:    "new"
+      content: this
+    update.save (err, up) ->
+      context.updates.push up.id
       next()
 
   mongoose.model "Entry", Entry
   fn()
+
+
+#save_entire_record = (entire) ->
+
+
+save_delta = (change) ->
+  if change
+    context = this
+
+    new_change = {}
+    new_change["set"] = {}
+    for key, val of change["$set"]
+      console.log key
+      #val = change["set"][key]
+      new_key = key.replace(/\./g, ",")
+      new_change["set"][new_key] = val
+    console.log new_change
+
+    update = new Update
+      user:   @id #'todo'
+      entry:  @id
+      before: new_change
+      after:  {}
+      type:   "new"
+    update.save (err, saved) ->
+      console.log "2 foo"
+      if err
+        console.log "foo"
+        console.log "Save error"
+        console.log err
+      else
+        console.log "foo"
+        # TODO actually saving. But this would make a recursive loop, generating an update
+        #      in order to actually set the update
+        console.log "Saved update! This:"
+        console.log saved
+        console.log context.updates.push saved.id
+        context.save (err2, mod) ->
+          console.log "Added update"
+          console.log err2
+          console.log mod
+      next()
+  else
+    next()
 
 exports.defineModel = defineModel
 

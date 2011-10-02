@@ -14,6 +14,11 @@ defineModel = (mongoose, fn) ->
       required: true
       ref:      "User"
 
+    content:
+      type: Schema.Types.Mixed
+      required: true
+
+    ###
     before:
       type: Schema.Types.Mixed
       required: true
@@ -21,6 +26,13 @@ defineModel = (mongoose, fn) ->
     after:
       type: Schema.Types.Mixed
       required: true
+    ###
+
+    revision_num:
+      type:     Number
+      default:  1
+      required: true
+      min: 1
 
     type:
       type: String
