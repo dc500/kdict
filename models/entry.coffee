@@ -5,6 +5,7 @@ update   = require "../models/update"
 update.defineModel mongoose, ->
   
 Update = mongoose.model("Update")
+Tag    = mongoose.model("Update")
 
 
 # TODO: Abstract this validation out to a seperate module to be used in interface
@@ -138,16 +139,18 @@ defineModel = (mongoose, fn) ->
     senses: [ Sense ]
 
     # More general-use, users able to set
-    tags:
-      type: [ Schema.ObjectId ]
-      index:  true
-      ref:    "Tag"
+    tags: [
+      type:  Schema.ObjectId
+      index: true
+      ref:   "Tag"
+    ]
 
     # NEW: Not sure if this is overkill on data duplication
-    updates:
-      type: [ Schema.ObjectId ]
+    updates: [
+      type: Schema.ObjectId
       #index: true
       ref:  "Update"
+    ]
   )
 
   Entry.virtual("id").get ->

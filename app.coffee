@@ -100,6 +100,7 @@ app.configure "production", ->
   app.use express.errorHandler()
 
 app.configure "test", ->
+  app.set "db-uri", "mongodb://localhost/kdict_test"
   app.use express.errorHandler(
     dumpExceptions: true
     showStack: true

@@ -1,6 +1,6 @@
-mongoose = require('mongoose')
 url      = require('url') # for pagination
 qs       = require('querystring')
+mongoose = require('mongoose')
 Entry    = mongoose.model('Entry')
 Tag      = mongoose.model('Tag')
 Korean   = require("../public/javascripts/korean.js")
