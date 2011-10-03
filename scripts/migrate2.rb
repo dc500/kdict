@@ -186,17 +186,15 @@ module KDict
             # Start with largest DB
             cursor.each do |row|
                 count += 1
-                if (count < 80000)
-                    next
-                #elsif (count > 83200)
-                #    exit
-                end
+                #if (count < 80000)
+                #    next
+                #end
 
                 if ((count % 1000) == 0)
                     puts "#{count} of #{total}"
                 end
 
-                kor, senses, tags = parse_clean_entry( collection, row )
+                kor, senses, tags = parse_clean_entry(collection, row)
 
                 # Sometimes we want to skip
                 if (kor.nil? && senses.nil? && tags.nil?)
@@ -280,7 +278,7 @@ module KDict
             if tag
                 tags.push(@tag_refs[tag])
             end
-            kor['length'] = kor['hangul'].length
+            kor['hangul_length'] = kor['hangul'].length
 
             #row['table'] = collection.name
 
@@ -320,12 +318,12 @@ module KDict
                 end
 
                 # Some words have whitespace on the end...
-                sub_cursor = see_coll.find( 'word' => /^\s*#{ row['word'] }\s*$/)
+                sub_cursor = see_coll.find( 'word' => /^#{ row['word'] }$/)
                 senses = Array.new()
 
                 # Want a list of all wordids in the original that contained "see___"
-                all_see = collection.find( { 'word' => /^\s*#{ row['word'] }\s*$/,
-                                             'def'  => /^\s*see (6000|gsso)/i },
+                all_see = collection.find( { 'word' => /^#{ row['word'] }$/,
+                                             'def'  => /^see (6000|gsso)/i },
                                            { :fields => [ 'wordid' ] } )
                 see_wordids = Array.new
                 all_see.each do |moo|
