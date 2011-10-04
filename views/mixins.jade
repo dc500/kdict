@@ -1,9 +1,12 @@
 mixin username_with_score(user)
-  span.score (#{user.score}) 
-  - if (user.display_name)
-    a(href="/users/#{user.username}", class="#{user.level}") #{user.display_name}
+  - if (typeof user !== 'undefined')
+    span.score (#{user.score}) 
+    - if (user.display_name)
+      a(href="/users/#{user.username}", class="#{user.level}") #{user.display_name}
+    - else
+      a(href="/users/#{user.username}", class="#{user.level}") #{user.username}
   - else
-    a(href="/users/#{user.username}", class="#{user.level}") #{user.username}
+    span (unknown user)
 
 mixin tag(tag)
   a(href='/?tag=#{tag.short}', rel="twipsy", title="#{tag.long}")
