@@ -3,6 +3,8 @@ require 'rubygems'  # not necessary for Ruby 1.9
 require 'mongo'
 require 'hpricot' # for parsing weird stuff in Hanja column
 require 'pp'
+require 'net/http'
+require 'uri'
 
 
 # 137240
@@ -236,11 +238,18 @@ module KDict
 
                 # New entry, insert it on its own
                 else
-                    entry_id = @entries.insert( {
+                    puts "Inserting via new method"
+                    self.post_entry( { 
                         'korean' => kor,
                         'senses' => senses,
                         'tags' => tags,
                     } )
+
+                    #entry_id = @entries.insert( {
+                    #    'korean' => kor,
+                    #    'senses' => senses,
+                    #    'tags' => tags,
+                    #} )
                 end
 
 
@@ -749,6 +758,21 @@ module KDict
         def self.kill_html(raw)
             raw.gsub!('"oak"', 'oak') # wordid: 222875 has invalid HTML. Awful hack
             return Hpricot(raw).inner_text
+        end
+
+
+        def self.post_entry(entry)
+
+            #1: Simple POST
+            res = Net::HTTP.post_form(
+                URI.parse('localhost:3000/entries/create_raw'),
+                {'entry' => entry})
+            case res
+            when Net::HTTPSuccess, Net::HTTPRedirection
+                puts "Success!"
+            else
+                puts res.error!
+            end
         end
     end
 end

@@ -168,6 +168,7 @@ app.get  '/entries/:id.:format?', entries.showById
 # PROBLEM: What if we want to find all entries for 'new'
 app.get  '/entries/new/?',             requireLogin, entries.new
 app.post '/entries/?',                 requireLogin, entries.create
+app.post '/entries/create_raw/?',      entries.create_raw
 app.get  '/entries/:id.:format?/edit', entries.edit
 app.put  '/entries/:id.:format?/edit', entries.update
 #app.get  '/entries/:id.:format?/edit', requireLogin, entries.edit

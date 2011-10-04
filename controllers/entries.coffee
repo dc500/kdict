@@ -70,6 +70,21 @@ exports.create = (req, res, next) ->
         res.redirect "/entries/" + entry._id
 
 
+exports.create_raw = (req, res, next) ->
+  console.log "Trying to create new entry"
+  console.log req.body
+  entry = new Entry( req.body.entry )
+  console.log "Saving..."
+  console.log entry
+  entry.save (err) ->
+    if err
+      console.log "Save error"
+      console.log err
+      next err
+    else
+      data = entry.toObject()
+      data.id = data._id
+      res.send data
 
 ###
 exports.paginatedQuery = (object, name, query, populate, order, page, per_page, callback) ->
