@@ -3,8 +3,10 @@ require 'rubygems'  # not necessary for Ruby 1.9
 require 'mongo'
 require 'hpricot' # for parsing weird stuff in Hanja column
 require 'pp'
+
 require 'net/http'
 require 'uri'
+require 'json'
 
 
 # 137240
@@ -97,67 +99,67 @@ module KDict
             data = {
                 'english_see' => {
                     "type"  => 'problem',
-                    "short" => 'English See',
+                    "short" => '!see',
                     "long"  => 'English definition contains "see..." reference'
                 },
                 'hangul_undef' => {
                     "type"  => 'problem',
-                    "short" => 'Hangul Undef',
+                    "short" => '!nohangul',
                     "long"  => 'Hangul is undefined.'
                 },
                 'english_undef' => {
                     "type"  => 'problem',
-                    "short" => 'English Undef',
+                    "short" => '!noenglish',
                     "long"  => 'English is undefined.'
                 },
                 'korean_content' => {
                     "type"  => 'problem',
-                    "short" => 'Hangul Content',
+                    "short" => '!hangul',
                     "long"  => 'Hangul field contains non-hangul characters'
                 },
                 'non_hanja' => {
                     "type"  => 'problem',
-                    "short" => 'Hanja Content',
+                    "short" => '!hanja',
                     "long"  => 'Hanja field contains non-hanja characters'
                 },
                 'check_merge' => {
                     "type"  => 'problem',
-                    "short" => 'Check Merge',
+                    "short" => '!merge',
                     "long"  => 'Check that meanings have been merged correctly. Identify any duplicate meanings and remove/merge them.'
                 },
                 'non-ascii' => {
                     'type'  => 'problem',
-                    'short' => 'English Content',
+                    'short' => '!english',
                     'long'  => 'English definition contains non-ascii characters.'
                 },
                 'english-parens' => {
                     'type'  => 'problem',
-                    'short' => 'English Parens',
+                    'short' => '!parens',
                     'long'  => "English contains parenthesis, square brackets or braces. Check usage and clean up."
                 },
                 'da_not_verb' => {
                     'type'  => 'problem',
-                    'short' => '다 Not VerbAdj',
+                    'short' => '!daend',
                     'long'  => "Word with 다 ending appears to not be a verb/adj. Check POS tag."
                 },
                 'english_acronym' => {
                     'type'  => 'problem',
-                    'short' => 'English Acronym',
+                    'short' => '!acronym',
                     'long'  => 'English definition appears to contain acronym. Confirm andexpand'
                 },
                 'english_backslashes' => {
                     'type'  => 'problem',
-                    'short' => 'English Backslashes',
+                    'short' => '!slashes',
                     'long'  => 'English contains backslashes, please clean up'
                 },
                 'unknown_pos' => {
                     'type'  => 'problem',
-                    'short' => 'Unknown POS',
+                    'short' => '!pos',
                     'long'  => 'POS tag is unknown. Please check legacy POS information or choose from knowledge'
                 },
                 'link_error' => {
                     'type'  => 'problem',
-                    'short' => 'Legacy Link Error',
+                    'short' => '!link',
                     'long'  => "Old definition was 'see...' but could not find linked article"
                 }
             }
@@ -180,7 +182,7 @@ module KDict
         
 
         def import(collection)
-            cursor = collection.find
+            cursor = collection.find #( { 'word' => '치다' } )
             total = cursor.count
             puts "#{total} entries in #{ collection.name } to process"
 
@@ -191,6 +193,9 @@ module KDict
                 #if (count < 80000)
                 #    next
                 #end
+                #if (count > 100000)
+                #  break
+                #end
 
                 if ((count % 1000) == 0)
                     puts "#{count} of #{total}"
@@ -200,7 +205,8 @@ module KDict
 
                 # Sometimes we want to skip
                 if (kor.nil? && senses.nil? && tags.nil?)
-                    next
+                  puts "Skipping as null content:"
+                  next
                 end
 
 
@@ -208,24 +214,37 @@ module KDict
                 existing_cursor = @entries.find( 'korean.hangul' => kor['hangul'] )
                 is_update = false
                 if existing_cursor.count > 1
-                    puts "We should never have more than 1 entry with the same hangul. Somethin has gone wrong."
+                    puts "We should never have more than 1 entry with the same hangul #{kor['hangul']}. Found #{existing_cursor.count}. Something has gone wrong."
                     exit
+                    
 
                 # So there's an existing entry
                 # If there is, we'll merge the new senses with those existing
                 elsif existing_cursor.count == 1
+
                     existing_cursor = existing_cursor.first
+                    if @entries.find(
+                      { 'korean.hangul' => kor['hangul'],
+                        'senses.legacy.wordid' => row['wordid'],
+                        'senses.legacy.table' => collection.name }
+                    ).count == 1
+                      puts "NO WAY ARE WE INSERTING THIS BABY #{kor['hangul']} with reference def #{row['def']} and id: #{row['wordid']}"
+                      next
+                    end
                     is_update = true
 
                     entry_id = existing_cursor['_id']
 
                     tags.push(@tag_refs['check_merge'])
 
-                    _puts "Update: #{kor['hangul']},\t#{senses.length} senses"
+                    if senses.length > 1
+                      puts "Update: #{kor['hangul']},\t#{senses.length} senses"
+                    end
 
                     updated_entry = @entries.update(
                         { 'korean.hangul' => kor['hangul'] }, 
                         { "$pushAll" => { "senses" => senses }, },
+                        #'updated_at' => Time.now },
                         { :upsert => true }
                     )
 
@@ -238,40 +257,45 @@ module KDict
 
                 # New entry, insert it on its own
                 else
-                    puts "Inserting via new method"
-                    self.post_entry( { 
+                    #KDict::Migration.post_entry( { 
+                    #    'korean' => kor,
+                    #    'senses' => senses,
+                    #    #'tags' => tags,
+                    #} )
+
+                    entry_id = @entries.insert( {
                         'korean' => kor,
                         'senses' => senses,
                         'tags' => tags,
+                        'created_at' => Time.now,
+                        'updated_at' => Time.now
                     } )
-
-                    #entry_id = @entries.insert( {
-                    #    'korean' => kor,
-                    #    'senses' => senses,
-                    #    'tags' => tags,
-                    #} )
                 end
 
 
                 update = Hash.new
                 update['entry']  = entry_id
-                if !is_update
+                if is_update
                     update['type']   = 'update'
                     ## TODO before senses not done yet. lol.
                     ##update['before']  = senses
                 else
                     update['type']   = 'new'
                 end
-                update['after']  = senses
+                update['content']  = { 'korean' => kor, 'senses' => senses, 'tags' => tags }
                 update['user']   = @user_id
                 update_id = @updates.insert( update )
 
-                @entries.update(
-                    { 'korean.hangul' => kor['hangul'] },
-                    #{ '_id' => entry_id },
-                    { "$push" => { 'updates' => update_id } },
-                    { :upsert => true }
-                )
+
+                # no longer updating list of updates
+                #@entries.update(
+                #    { 'korean.hangul' => kor['hangul'],
+                #        'updated_at' => Time.now },
+                #    #{ '_id' => entry_id },
+                #    { "$push" => { 'updates' => update_id } },
+
+                #    { :upsert => true }
+                #)
             end
         end
 
@@ -313,10 +337,13 @@ module KDict
 
                 see_coll = nil
 
+
+                
+
                 if (row['def'] == "see 6000")
                     if (collection.name == 'm_korean')
-                        _puts "Self-referential?"
-                        _puts row.inspect
+                        puts "Self-referential?"
+                        puts row.inspect
                         return nil, nil, nil
                     end
                     see_coll = @m_korean
@@ -333,12 +360,29 @@ module KDict
                 # Want a list of all wordids in the original that contained "see___"
                 all_see = collection.find( { 'word' => /^#{ row['word'] }$/,
                                              'def'  => /^see (6000|gsso)/i },
-                                           { :fields => [ 'wordid' ] } )
+                                           { :fields => [ 'wordid', 'word' ] } )
+                
+
                 see_wordids = Array.new
+                see_words = Array.new
                 all_see.each do |moo|
                     see_wordids.push(moo['wordid'])
+                    see_words.push(moo['word'])
+
+                    if moo['word'] != row['word']
+                      puts "WHOA WHOA WHOA, Non-exact match"
+                      exit
+                    end
                 end
-                puts "#{row['word']} " + see_wordids.inspect
+                puts "See: #{row['word']} #{see_wordids.inspect} #{see_words.inspect}"
+
+                if @entries.find(
+                  { 'korean.hangul' => kor['hangul'],
+                    'senses.legacy.see_wordid' => see_wordids[0] }
+                ).count == 1
+                  puts "Trying to insert existing word #{kor['hangul']} with reference def #{row['def']}"
+                  return nil, nil, nil
+                end
 
                 if sub_cursor.count >= 1
                     tags.push(@tag_refs['check_merge'])
@@ -486,9 +530,6 @@ module KDict
             if !row['syn'].nil? && row['syn'] != ""
                 single_sense['legacy']['syn']       = row['syn']
             end
-
-            #single_sense['created_at'] = Time.now;
-            #single_sense['updated_at'] = Time.now;
 
             return kor, [ single_sense ], tags
         end
@@ -762,16 +803,31 @@ module KDict
 
 
         def self.post_entry(entry)
-
+            blah = JSON.generate(entry)
             #1: Simple POST
-            res = Net::HTTP.post_form(
-                URI.parse('localhost:3000/entries/create_raw'),
-                {'entry' => entry})
+            # using block
+            res = Net::HTTP.post_form(URI.parse('http://localhost:3000/entries/create_raw'), 'entry_json' => blah)
+            #uri  = URI.parse('http://localhost:3000/entries/create_raw')
+            #res = Net::HTTP.start(uri.host, uri.port) do |http|
+            #    http.request_post('entries/create_raw', entry) do |response|
+            #        p response.status
+            #        p response['content-type']
+            #        response.read_body do |str|   # read body now
+            #            print str
+            #        end
+            #    end
+            #end
+            
+            #request = Net::HTTP::Post.new(uri.request_uri)
+            #request.set_form_data({'entry' => entry})
+            #response = http.request(request)
             case res
             when Net::HTTPSuccess, Net::HTTPRedirection
-                puts "Success!"
             else
                 puts res.error!
+                puts entry
+                puts blah
+                exit
             end
         end
     end
