@@ -1,11 +1,12 @@
 url      = require('url') # for pagination
 qs       = require('querystring')
+async    = require('async')
 mongoose = require('mongoose')
 Entry    = mongoose.model('Entry')
+Update   = mongoose.model('Update')
 Tag      = mongoose.model('Tag')
 Korean   = require("../public/javascripts/korean.js")
 Search   = require("../public/javascripts/search.js")
-async    = require('async')
 
 NotFound = (msg) ->
   @name = "NotFound"
@@ -16,13 +17,18 @@ exports.show = (req, res, next) ->
   console.log "Getting for " + req.params.word
     #keyval = generalString(req.params.word)
     #query[keyval[0]] = keyval[1]
-  Entry.findOne( { 'korean.hangul' : req.params.word } ).populate('updates', ['created_at']).populate('tags').run (err, entry) ->
+  Entry.findOne( { 'korean.hangul' : req.params.word } ).populate('tags').run (err, entry) ->
     return next(new NotFound("Entry not found")) unless entry
-    console.log entry
-    res.render 'entries/show',
-      locals:
-        entry: entry
-        title: entry.korean.hangul
+    Update.find( { 'entry.id' : entry.id } ).run (err, updates) ->
+      console.log updates
+      return next(new NotFound("Updates not found")) unless updates
+      
+      console.log entry
+      res.render 'entries/show',
+        locals:
+          entry: entry
+          updates: updates
+          title: entry.korean.hangul
 
 # Is this needed?
 exports.showById = (req, res, next) ->
@@ -71,14 +77,14 @@ exports.create = (req, res, next) ->
 
 
 exports.create_raw = (req, res, next) ->
-  console.log "Trying to create new entry"
-  console.log req.body
-  entry = new Entry( req.body.entry )
-  console.log "Saving..."
-  console.log entry
+  # Entry is JSON baby!
+  entry_raw = JSON.parse(req.body.entry_json)
+  entry = new Entry( entry_raw )
   entry.save (err) ->
     if err
       console.log "Save error"
+      console.log entry_raw
+      console.log entry
       console.log err
       next err
     else

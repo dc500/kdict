@@ -29,9 +29,10 @@ exports.list = (req, res, next) ->
 exports.show = (req, res, next) ->
   Update.findById req.params.id, (err, update) ->
     return next(new NotFound("Entry not found"))  unless update
-    console.log "Dumping contents of D baby"
+    console.log "Dumping contents of update"
     console.log update
-    res.render "updates/show", locals:
-      update: update
-      title: 'Update: '.update.korean.word
+    #res.render "updates/show", locals:
+    res.render "entries/show", locals:
+      entry: update.content
+      title: "Update: #{update.content.korean.hangul} (#{update.id})"
 

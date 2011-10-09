@@ -97,7 +97,8 @@ script
   
     h6 Revisions
     ul.unstyled
-      - each update in entry.updates
+      - each update in updates
         li (#{update.created_at}) 
+          span(class="label #{update.type}")= update.type 
           a(href="/updates/#{update._id}")= update._id
 

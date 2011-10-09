@@ -1,41 +1,92 @@
-.page-header
-  h1= title
+include ../mixins
 
 .page-header
-  h1 Search
+  h1= update.content.korean.hangul
 
-include includes/large-search
-
-p Showing page #{results.current_page} of #{results.total_pages} (#{results.range} of #{results.count}). Detected language: #{results.language}
-
-h1 Results
+    small
+      div(style='float: right;')
+        a.btn.small(href='/entries/#{entry._id}/edit') Temp Edit 
+        //- if (typeof currentUser !== 'undefined')
+          a.btn(href='/entries/#{entry._id}/edit') Edit
+        //- else
+          a.btn(href='/login') Login to edit
 
 .row
+  .span12
+    .row
+      .span3
+        h3#definitions Definitions
+      .span9
+        - each sense, i in entry.senses
+          .row(id="#{i+1}")
+            .span9
+            h3
+              a(href='\##{i+1}', name='#{i+1}')= entry.korean.hangul
+              sup.meaning= i+1
+              small= sense.pos
+ 
+            - if (sense.hanja && sense.hanja.length > 0)
+              span.hanja (#{sense.hanja_all}) 
+          
+            ul
+              - each word in sense.definitions.english
+                - if (word == '')
+                  li (Undefined, please fix!)
+                - else
+                  li= word
+    .row
+      .span3
+        h3#examples Examples
+    
+      .span6
+        h6
+          a(href="http://tatoeba.org/eng/sentences/search?query=#{entry.korean.hangul}&from=kor") Search for examples on Tatoeba.org
+    
+
   .span4
-    h2 A Little History
-  .span6
-    p KDict actually started from a want for a Rikaichan for Korean. But the lack of an open Korean dictionary made this impossible.
+    h6#pronunciation Pronunciation
+    table
+      tr
+        td Hangul
+        td= entry.korean.hangul
+      tr
+        td Others
+        td Coming soon
 
 
+.row
+  .span12
+    .row
+      .span3
+        h3 Internal
+        p This information is useful for developers
 
-- if (results.entries.length > 0)
-  != partial('update', results.updates)
-    // Want to show the 10 either side of the thing
-    // TODO Partial rendering
-    div.pagination
-      ul
-        li.prev
-          a Previous
-        //a(href="/?q=#{results.query}") First
-        - for (var i = results.min_page; i < results.max_page; i++)
-          li 
-            - if (i == results.current_page)
-              #{i}
-            - else
-              a(href="/?q=#{results.query}&pg=#{i}")= i
-        li.next
-          a Next
-          //a(href="/?q=#{results.query}&pg=#{results.total_pages}") #{results.total_pages} Last
+      .span9
+        - each sense, i in entry.senses
+          h6 Sense \##{i+1}
+          p #{sense.definitions.english_all}
+          table
+            tr
+              th Internal ID
+              td= sense._id
+            - if (typeof sense.legacy.submitter !== 'undefined')
+              tr
+                th Submitter
+                td= sense.legacy.submitter
+              tr
+                th WordID
+                td= sense.legacy.wordid
+              tr
+                th Table
+                td= sense.legacy.table
 
-- else
-  p No results found
+  .span4
+    h6 Tags
+    mixin tag_list(entry.tags)
+  
+    h6 Revisions
+    ul.unstyled
+      - each update in entry.updates
+        li (#{update.created_at}) 
+          a(href="/updates/#{update._id}")= update._id
+
