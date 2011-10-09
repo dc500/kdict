@@ -11,17 +11,17 @@ Tag    = mongoose.model("Update")
 # TODO: Abstract this validation out to a seperate module to be used in interface
 #       code
 valHangul = (value) ->
-  return ktools.detect_characters(value) == "hangul"
+  return ktools.is_type(value, { space: true, number: true, hangul: true })
 
 valAlphanumeric = (values) ->
   for val in values
-    if ktools.detect_characters(val) != "english"
+    if !ktools.is_type(val, { space: true, number: true, english: true })
       return false
   return true
 
 valHanja = (values) ->
   for val in values
-    if ktools.detect_characters(val) != "hanja"
+    if !ktools.is_type(val, { hanja: true })
       return false
   return true
 
@@ -39,7 +39,6 @@ trim = (value) ->
 
 _trim = (value) ->
   return value.replace(/^\s+|\s+$/g, "")
-
 
 fail = (value) ->
   return false
@@ -146,11 +145,15 @@ defineModel = (mongoose, fn) ->
     ]
 
     # NEW: Not sure if this is overkill on data duplication
-    updates: [
-      type: Schema.ObjectId
-      #index: true
-      ref:  "Update"
-    ]
+    revision:
+      type:    Number
+      min:     0
+      default: 0
+    #updates: [
+    #  type: Schema.ObjectId
+    #  #index: true
+    #  ref:  "Update"
+    #]
   )
 
   Entry.virtual("id").get ->
@@ -161,34 +164,40 @@ defineModel = (mongoose, fn) ->
     return trim(hangul)
 
   Entry.pre "save", (next) ->
-    context = this
+    #context = this
     # TODO Automatically generate phonetic representation
-    # TODO Automatically create Update
-    # TODO Increment revision count
+
+    @revision = @revision + 1 # starts at 0
 
     # Only create delta Update if this is an update with non-update content
-    change = @_delta()
+    #change = @_delta()
     #save_delta(change)
     #save_entire_record(this)
 
-    # PROBLEM: If we fail saving, we've created an Update document
-    # TODO RESOLVE
+    next()
+
+  Entry.post "save", () ->
+    #console.log "Post save"
+    #console.log next
+    #console.log foo
+    if @revision == 1
+      type = "new"
+    else
+      type = "edit"
+
     update = new Update
       user:    @id # TODO change
       entry:   @id
-      type:    "new"
+      type:    type
       content: this
     update.save (err, up) ->
-      context.updates.push up.id
-      next()
+      #next()
+      #  context.updates.push up.id
 
   mongoose.model "Entry", Entry
   fn()
 
-
-#save_entire_record = (entire) ->
-
-
+###
 save_delta = (change) ->
   if change
     context = this
@@ -228,6 +237,7 @@ save_delta = (change) ->
       next()
   else
     next()
+###
 
 exports.defineModel = defineModel
 
