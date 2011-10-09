@@ -14,7 +14,7 @@ Here's how to get a local copy of KDict running for development purposes:
 
 1. Download the source with ```$ git clone git://github.com/bhumphreys/kdict.git```
 2. Install [Node](http://nodejs.org/), [NPM](http://npmjs.org/) and [MongoDB](http://www.mongodb.org/)
-3. Install the required NPM packages
+3. Install the required NPM packages with ```npm install``` in the git repo.
 4. Start an instance of the MongoDB server ```mongod```
 5. Download the [latest data dump](http://kdict.org/developers/download) and import into a db/collection called ``kdict``/``entries`` using [```mongoimport```](http://www.mongodb.org/display/DOCS/Import+Export+Tools#ImportExportTools-mongoimport)
 6. Run the KDict node app with ```coffee app.coffee```
@@ -58,3 +58,10 @@ entry: {
 	]
 }
 ```
+
+
+## Credits
+
+- Code: [Ben Humphreys](http://benhumphreys.co.uk/)
+- Data: [Joseph Speigle](http://ezcorean.com/)
+- Illustration: [James Shedden](http://jshedden.com/)
