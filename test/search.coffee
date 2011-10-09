@@ -4,6 +4,7 @@ app    = require "../app"
 vows_bdd = require "vows-bdd"
 mongoose = require "mongoose"
 entry    = require "../models/entry"
+e        = require "./entry-helper"
 
 port = 3001
 app.listen port
@@ -14,24 +15,6 @@ app.listen port
 Entry  = mongoose.model("Entry")
 #Entry.collection.drop() # You just dropped the production DB. Congratulations
 
-model =
-  single: (hangul, english, hanja, callback) ->
-    ->
-      if not Array.isArray(english)
-        english = [ english ]
-      entry = new Entry
-        korean:
-          hangul: hangul
-        senses: [
-          definitions:
-            english: english
-        ]
-      if hanja
-        if not Array.isArray(hanja)
-          hanja = [ hanja ]
-        entry.senses[0].hanja = hanja
-      entry.save callback
-
 vows_bdd.Feature("Searching")
   .scenario("Basic search")
 
@@ -39,7 +22,7 @@ vows_bdd.Feature("Searching")
   #  @callback
 
   .given "the DB is popuplated", ->
-    model.single "안녕하세요", "hello", null, @callback
+    e.single "안녕하세요", "hello", null, @callback
 
   .when "I visit the front page", ->
     zombie.visit "http://localhost:#{port}/", @callback

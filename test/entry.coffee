@@ -75,7 +75,11 @@ vows.describe("Entry").addBatch(
           ]
         entry.save this.callback
       "should split into an array of words": (err, entry) ->
-        assert.deepEqual entry.senses[0].definitions.english, [ "ham", "spam" ]
+        pair = entry.senses[0].definitions.english
+        test = [ "ham", "spam" ]
+        assert.equal pair[0], test[0]
+        assert.equal pair[1], test[1]
+        #assert.deepEqual entry.senses[0].definitions.english, [ "ham", "spam" ]
 
   "Another entry":
     "when created":
@@ -90,10 +94,11 @@ vows.describe("Entry").addBatch(
           ]
         local_callback = @callback
         entry.save (err, entry) ->
-          Update.findById entry.updates[0], local_callback
-      "should have an update record": (err, update) ->
-        assert.equal update.content.korean.hangul, "영국"
-        assert.equal update.content.senses[0].definitions.english[0], "England"
+          Update.find( { 'entry': entry.id }).run(local_callback)
+      "should have an update record": (err, updates) ->
+        assert.length updates, 1
+        assert.equal updates[0].content.korean.hangul, "영국"
+        assert.equal updates[0].content.senses[0].definitions.english[0], "England"
 
     "when updated":
       topic: ->
@@ -106,14 +111,13 @@ vows.describe("Entry").addBatch(
           ]
         local_callback = @callback
         entry.save (err, saved) ->
-          #console.log saved
           saved.korean.hangul = "영영영국"
           saved.senses[0].definitions.english_all = "limey"
           saved.save local_callback
 
       "should have two update records": (err, entry) ->
-        #console.log "Saved!"
-        assert.length entry.updates, 2
+        #assert.length entry.updates, 2
+        assert.equal entry.revision, 2
         assert.equal entry.korean.hangul_length, 4
 
 ).export module
