@@ -1,3 +1,8 @@
+## Notice - Project no longer maintained
+
+Sorry, but the project is no longer being maintained. You can download a final data dump in JSON format from http://benhumphreys.co.uk/kdict/
+ - Ben Humphreys
+
 # KDict - Open-source Korean Dictionary
 
 KDict is an open-source Korean dictionary that anyone can edit and contribute to.
